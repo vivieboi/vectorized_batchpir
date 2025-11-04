@@ -61,33 +61,32 @@ void Server::populate_raw_db()
     rawdb_.resize(rounded_db_entries);
 
     // Define a function to generate a random entry
-    auto generate_random_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_random_entry = [entry_size](span<unsigned char> rawdb_row) -> void
     {
-        std::vector<unsigned char> entry(entry_size);
-        std::generate(entry.begin(), entry.end(), []()
-                      {
-                          return rand() % 0xFF;
-                          // return 1;
-                      });
-        return entry;
+        for (int i = 0; i < entry_size; i++) {
+            rawdb_row[i] = rand() % 0xFF;
+        }
     };
 
     // Define a function to generate a zero-filled entry
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size](span<unsigned char> rawdb_row) -> void
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        for (int i = 0; i < entry_size; i++) {
+            rawdb_row[i] = 1;
+        }
     };
 
     // Populate the rawdb_ vector with entries
+    rawdb_ = RawDB(rounded_db_entries, entry_size);
     for (size_t i = 0; i < rounded_db_entries; ++i)
     {
         if (i < db_entries)
         {
-            rawdb_[i] = generate_random_entry();
+            generate_random_entry(rawdb_[i]);
         }
         else
         {
-            rawdb_[i] = generate_one_entry();
+            generate_one_entry(rawdb_[i]);
         }
     }
 }
@@ -108,14 +107,18 @@ void Server::round_db(RawDB &db)
     auto entry_size = pir_params_.get_entry_size();
 
     // Define a function to generate a zero-filled entry
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size](span<unsigned char> rawdb_row) -> void
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        for (int i = 0; i < entry_size; i++) {
+            rawdb_row[i] = 1;
+        }
     };
 
-    for (int i = 0; i < (rounded_db_entries - db_entries); i++)
+    db.resize(rounded_db_entries);      // Resize it to the right # of entries
+
+    for (int i = db_entries; i < rounded_db_entries; i++)
     {
-        db.push_back(generate_one_entry());
+        generate_one_entry(db[i]);      // TODO: double-check this logic
     }
 }
 
@@ -137,34 +140,35 @@ RawDB Server::populate_return_raw_db()
     auto rounded_db_entries = pir_params_.get_rounded_num_entries();
     auto entry_size = pir_params_.get_entry_size();
 
-    // Resize the rawdb vector to the correct size
-    RawDB rawdb(rounded_db_entries);
 
     // Define a function to generate a random entry
-    auto generate_random_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_random_entry = [entry_size](span<unsigned char> row) -> void
     {
-        std::vector<unsigned char> entry(entry_size);
-        std::generate(entry.begin(), entry.end(), []()
-                      { return rand() % 0xFF; });
-        return entry;
+        for (int i = 0; i < entry_size; i++) {
+            row[i] = rand() % 0xFF;
+        }
     };
 
     // Define a function to generate a zero-filled entry
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size](span<unsigned char> row) -> void
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        for (int i = 0; i < entry_size; i++) {
+            row[i] = 1;
+        }
     };
+
+    RawDB rawdb = RawDB(rounded_db_entries, entry_size);
 
     // Populate the rawdb vector with entries
     for (size_t i = 0; i < rounded_db_entries; ++i)
     {
         if (i < db_entries)
         {
-            rawdb[i] = generate_random_entry();
+            generate_random_entry(rawdb[i]);
         }
         else
         {
-            rawdb[i] = generate_one_entry();
+            generate_one_entry(rawdb[i]);
         }
     }
 
@@ -421,7 +425,7 @@ PIRResponseList Server::merge_responses_chunks_buckets(vector<PIRResponseList> &
             }
 
             // selection logic: select consecutive gap_  entries from each bucket
-            std::vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
+            vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
             std::fill_n(selection_vector.begin() + (j * current_fill), current_fill, 1ULL);
             std::fill_n(selection_vector.begin() + row_size_ + (j * current_fill), current_fill, 1ULL);
 
@@ -483,7 +487,7 @@ PIRResponseList Server::merge_responses_buckets_chunks(vector<PIRResponseList> &
             }
 
             // selection logic: select consecutive gap_  entries from each bucket
-            std::vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
+            vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
             std::fill_n(selection_vector.begin() + (i * gap_), gap_, 1ULL);
             std::fill_n(selection_vector.begin() + row_size_ + (i * gap_), gap_, 1ULL);
 
@@ -565,8 +569,9 @@ void Server::print_rawdb()
 {
     std::cout << "BatchPIRServer: Size of raw db " << rawdb_.size() << std::endl;
     int idx = 0;
-    for (const auto &row : rawdb_)
+    for (int i = 0; i < rawdb_.size(); i++)
     {
+        span<unsigned char> row = rawdb_[i];
         std::cout << idx << " [";
         for (auto it = row.begin(); it != row.end(); it++)
         {
@@ -583,7 +588,7 @@ void Server::print_encoded_db()
 {
     for (const auto &row : encoded_db_)
     {
-        std::vector<uint64_t> decoded_plain;
+        vector<uint64_t> decoded_plain;
         batch_encoder_->decode(row, decoded_plain);
 
         for (const auto &entry : decoded_plain)
@@ -651,13 +656,46 @@ void Server::ntt_preprocess_db()
     std::cout << "BatchPIRServer: Database is NTT processed!" << std::endl;
 }
 
-std::vector<uint64_t> Server::convert_to_list_of_coeff(std::vector<unsigned char> input_list)
+vector<uint64_t> Server::convert_to_list_of_coeff(vector<unsigned char> input_list)
 {
     auto size_of_input = input_list.size();
     const int size_of_coeff = plaint_bit_count_ - 1;
     const int remain = (size_of_input * 8) % size_of_coeff;
     const int cols = pir_params_.get_num_slots_per_entry();
-    std::vector<uint64_t> output_list(cols);
+    vector<uint64_t> output_list(cols);
+    std::string bit_str;
+
+    for (int i = 0; i < size_of_input; i++)
+    {
+        bit_str += std::bitset<8>(input_list[i]).to_string();
+    }
+
+    if (remain != 0)
+    {
+        for (int i = 0; i < (size_of_coeff - remain); i++)
+            bit_str += "1";
+    }
+
+    for (int i = 0; i < cols; i++)
+    {
+        uint64_t value = 0;
+        for (char bit : bit_str.substr(i * size_of_coeff, size_of_coeff)) {
+            value <<= 1;
+            value |= (bit == '1') ? 1 : 0;
+        }
+
+        output_list[i] = value;
+    }
+    return output_list;
+}
+
+vector<uint64_t> Server::convert_to_list_of_coeff(std::span<unsigned char> input_list)
+{
+    auto size_of_input = input_list.size();
+    const int size_of_coeff = plaint_bit_count_ - 1;
+    const int remain = (size_of_input * 8) % size_of_coeff;
+    const int cols = pir_params_.get_num_slots_per_entry();
+    vector<uint64_t> output_list(cols);
     std::string bit_str;
 
     for (int i = 0; i < size_of_input; i++)
@@ -751,14 +789,14 @@ vector<Ciphertext> Server::process_first_dimension_delayed_mod(uint32_t client_i
     size_t coeff_count = parms.poly_modulus_degree();
     size_t coeff_mod_count = coeff_modulus.size();
     size_t encrypted_ntt_size = rotated_query[0].size();
-    std::vector<std::vector<uint128_t>> buffer(encrypted_ntt_size, std::vector<uint128_t>(coeff_count * coeff_mod_count, 0));
+    vector<vector<uint128_t>> buffer(encrypted_ntt_size, vector<uint128_t>(coeff_count * coeff_mod_count, 0));
 
     Ciphertext ct_acc;
 
     for (int col_id = 0; col_id < encoded_db_.size(); col_id += pir_dimensions_[1])
     {
 
-        std::vector<std::vector<uint128_t>> buffer(encrypted_ntt_size, std::vector<uint128_t>(coeff_count * coeff_mod_count, 1));
+        vector<vector<uint128_t>> buffer(encrypted_ntt_size, vector<uint128_t>(coeff_count * coeff_mod_count, 1));
         for (int i = 0; i < pir_dimensions_[1]; i++)
         {
             for (size_t poly_id = 0; poly_id < encrypted_ntt_size; poly_id++)
@@ -937,7 +975,7 @@ PIRResponseList Server::generate_response(uint32_t client_id, PIRQuery query)
     return response;
 }
 
-bool Server::check_decoded_entry(std::vector<unsigned char> entry, int index)
+bool Server::check_decoded_entry(vector<unsigned char> entry, int index)
 {
     if (entry.size() != rawdb_list_[1][index].size())
     {
@@ -970,7 +1008,31 @@ bool Server::check_decoded_entry(std::vector<unsigned char> entry, int index)
     return result;
 }
 
-bool Server::check_decoded_entries(std::vector<std::vector<unsigned char>> entries, vector<uint64_t> indices)
+bool Server::check_decoded_entries(vector<vector<unsigned char>> entries, vector<uint64_t> indices)
+{
+    for (int i = 0; i < num_databases_; i++)
+    {
+
+        // dont check anything if its a default inddex, only used for cuckoo hashing
+        if (indices[i] != pir_params_.get_default_value())
+        {
+            if (entries[i].size() != rawdb_list_[i][indices[i]].size())
+            {
+                throw std::runtime_error("Error: Vectors have different sizes!");
+            }
+
+            bool result = std::equal(entries[i].begin(), entries[i].end(), rawdb_list_[i][indices[i]].begin());
+            if (!result)
+            {
+                throw std::runtime_error("Error: Entries do not match!");
+            }
+        }
+    }
+    cout << endl;
+    return true;
+}
+
+bool Server::check_decoded_entries(RawDB entries, vector<uint64_t> indices)
 {
     for (int i = 0; i < num_databases_; i++)
     {

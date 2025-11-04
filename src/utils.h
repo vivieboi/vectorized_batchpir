@@ -9,15 +9,19 @@
 #include <vector>
 #include "database_constants.h"
 #include "seal/seal.h"
+#include "rawdb.h"
+
+using namespace std;
 
 
-typedef  std::vector<seal::Ciphertext> PIRQuery;
+typedef  vector<seal::Ciphertext> PIRQuery;
 typedef  seal::Ciphertext PIRResponse;
-typedef  std::vector<seal::Ciphertext> PIRResponseList;
-typedef  std::vector<std::vector<unsigned char>>  RawDB;
-typedef  std::vector<std::vector<unsigned char>>  RawResponses;
-typedef  std::vector<uint64_t> Row;
-typedef  std::vector<Row> PirDB;
+typedef  vector<seal::Ciphertext> PIRResponseList;
+// typedef  vector<vector<unsigned char>>  RawDB;
+// typedef  vector<vector<unsigned char>>  RawResponses;     // TODO: is this the same as a RawDB object?
+typedef RawDB RawResponses;
+typedef  vector<uint64_t> Row;
+typedef  vector<Row> PirDB;
 using namespace std;
 using namespace seal;
 
@@ -46,7 +50,7 @@ namespace utils {
     }
 
 
-    inline std::vector<uint64_t> rotate_vector_row(std::vector<uint64_t>& vec, int rotation_Amount) {
+    inline vector<uint64_t> rotate_vector_row(vector<uint64_t>& vec, int rotation_Amount) {
         if (vec.empty()) {
             return {};
         }
@@ -54,7 +58,7 @@ namespace utils {
         const size_t row_size = vec.size()/2;
         rotation_Amount = rotation_Amount % row_size;
 
-        std::vector<uint64_t> temp(vec.size(), 0ULL);
+        vector<uint64_t> temp(vec.size(), 0ULL);
         for (size_t i = 0; i < row_size; ++i) {
             temp[(i + rotation_Amount) % row_size] = vec[i];
             temp[(i + rotation_Amount) % row_size + row_size] = vec[i + row_size];
@@ -62,7 +66,7 @@ namespace utils {
         return temp;
     }
 
-    inline std::vector<uint64_t> rotate_vector_col(std::vector<uint64_t>& vec) {
+    inline vector<uint64_t> rotate_vector_col(vector<uint64_t>& vec) {
         if (vec.empty()) {
             return {};
         }
@@ -84,8 +88,8 @@ namespace utils {
         return hasher1(std::to_string(id) + std::to_string(nonce) + std::to_string(data)) % total_buckets;
     }
 
-    inline std::vector<size_t> get_candidate_buckets(size_t data, size_t num_candidates , size_t total_buckets){
-        std::vector<size_t> candidate_buckets;
+    inline vector<size_t> get_candidate_buckets(size_t data, size_t num_candidates , size_t total_buckets){
+        vector<size_t> candidate_buckets;
          
         for (int i = 0; i < num_candidates; i++){
             size_t nonce = 0;
