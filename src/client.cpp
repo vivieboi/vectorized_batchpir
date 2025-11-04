@@ -64,14 +64,14 @@ vector<uint64_t> Client::get_entry_list()
     return entry_slot_list_;
 }
 
-std::vector<unsigned char> Client::decode_response(PIRResponseList response)
+vector<unsigned char> Client::decode_response(PIRResponseList response)
 {
 
     check_noise_budget(response[0]);
 
     seal::Plaintext pt;
-    std::vector<uint64_t> decoded_response;
-    std::vector<uint64_t> entry(num_columns_per_entry_, 0ULL);
+    vector<uint64_t> decoded_response;
+    vector<uint64_t> entry(num_columns_per_entry_, 0ULL);
 
     for (int i = 0; i < response.size(); i++)
     {
@@ -106,9 +106,9 @@ vector<RawResponses> Client::decode_merged_responses(PIRResponseList response, s
     size_t num_entries_single_row = row_size_ / num_slots_per_entry_rounded;
 
     seal::Plaintext pt;
-    std::vector<uint64_t> decoded_response;
+    vector<uint64_t> decoded_response;
     size_t remaining_entries = cuckoo_size;
-    std::vector<std::vector<uint64_t>> pir_entries(cuckoo_size, std::vector<uint64_t>(num_slots_per_entry_rounded, 0ULL));
+    vector<vector<uint64_t>> pir_entries(cuckoo_size, vector<uint64_t>(num_slots_per_entry_rounded, 0ULL));
 
     int row_offset = 0;
     for (int k = 0; k < response.size(); k++)
@@ -155,7 +155,7 @@ vector<RawResponses> Client::decode_merged_responses(PIRResponseList response, s
     }
 
     remaining_entries = cuckoo_size;
-    vector<std::vector<std::vector<unsigned char>>> raw_entries_list;
+    vector<vector<vector<unsigned char>>> raw_entries_list;
 
     // loop over the pir_entries list in increments of gap_
     for (int i = 0; i < pir_entries.size(); i += (gap_ * 2))
@@ -163,12 +163,12 @@ vector<RawResponses> Client::decode_merged_responses(PIRResponseList response, s
 
         // pick number of entries left to parse
         int num_queries = min(remaining_entries, gap_ * 2);
-        std::vector<std::vector<unsigned char>> raw_entries(num_queries);
+        vector<vector<unsigned char>> raw_entries(num_queries);
 
         for (int j = 0; j < num_queries; j++)
         {
 
-            std::vector<uint64_t> input_list(pir_entries[i + j].begin(), pir_entries[i + j].begin() + num_slots_per_entry);
+            vector<uint64_t> input_list(pir_entries[i + j].begin(), pir_entries[i + j].begin() + num_slots_per_entry);
             raw_entries[j] = convert_to_rawdb_entry(input_list);
         }
         remaining_entries -= num_queries;
@@ -178,7 +178,7 @@ vector<RawResponses> Client::decode_merged_responses(PIRResponseList response, s
     return raw_entries_list;
 }
 
-std::vector<std::vector<unsigned char>> Client::single_pir_decode_responses(PIRResponseList response){
+vector<vector<unsigned char>> Client::single_pir_decode_responses(PIRResponseList response){
     auto noise_budget = decryptor_->invariant_noise_budget(response[0]);
     if (noise_budget == 0) {
         throw std::runtime_error("Error: noise budget is zero");
@@ -190,8 +190,8 @@ std::vector<std::vector<unsigned char>> Client::single_pir_decode_responses(PIRR
 
     
     seal::Plaintext pt;
-    std::vector<uint64_t> decoded_response;
-    std::vector<std::vector<uint64_t>> pir_entries(num_queries, std::vector<uint64_t>(num_columns_per_entry_, 0ULL));
+    vector<uint64_t> decoded_response;
+    vector<vector<uint64_t>> pir_entries(num_queries, vector<uint64_t>(num_columns_per_entry_, 0ULL));
     uint64_t idx = 0;
 
     for(int i = 0; i < response.size(); i++){
@@ -211,7 +211,7 @@ std::vector<std::vector<unsigned char>> Client::single_pir_decode_responses(PIRR
         }
     }
     
-    std::vector<std::vector<unsigned char>> raw_entries(num_queries);
+    vector<vector<unsigned char>> raw_entries(num_queries);
     for(int j = 0; j < num_queries; j++){
         raw_entries[j] = convert_to_rawdb_entry(pir_entries[j]);
     }
@@ -225,8 +225,8 @@ RawResponses Client::decode_responses(PIRResponseList response)
 
     auto num_queries = num_databases_;
     seal::Plaintext pt;
-    std::vector<uint64_t> decoded_response;
-    std::vector<std::vector<uint64_t>> pir_entries(num_queries, std::vector<uint64_t>(num_columns_per_entry_, 0ULL));
+    vector<uint64_t> decoded_response;
+    vector<vector<uint64_t>> pir_entries(num_queries, vector<uint64_t>(num_columns_per_entry_, 0ULL));
     uint64_t idx = 0;
 
     const size_t max_empty_slots = pir_params_.get_dimensions()[0];
@@ -264,7 +264,7 @@ RawResponses Client::decode_responses(PIRResponseList response)
         remaining_slots_entry -= max_empty_slots;
     }
 
-    std::vector<std::vector<unsigned char>> raw_entries(num_queries);
+    vector<vector<unsigned char>> raw_entries(num_queries);
     for (int j = 0; j < num_queries; j++)
     {
         raw_entries[j] = convert_to_rawdb_entry(pir_entries[j]);
@@ -280,8 +280,8 @@ RawResponses Client::decode_responses_chunks(PIRResponseList response)
     auto num_queries = num_databases_;
 
     seal::Plaintext pt;
-    std::vector<uint64_t> decoded_response;
-    std::vector<std::vector<uint64_t>> pir_entries(num_queries, std::vector<uint64_t>(num_columns_per_entry_, 0ULL));
+    vector<uint64_t> decoded_response;
+    vector<vector<uint64_t>> pir_entries(num_queries, vector<uint64_t>(num_columns_per_entry_, 0ULL));
     uint64_t row_idx = 0;
 
     size_t remaining = num_columns_per_entry_;
@@ -313,7 +313,7 @@ RawResponses Client::decode_responses_chunks(PIRResponseList response)
         }
     }
 
-    std::vector<std::vector<unsigned char>> raw_entries(num_queries);
+    vector<vector<unsigned char>> raw_entries(num_queries);
     for (int j = 0; j < num_queries; j++)
     {
         raw_entries[j] = convert_to_rawdb_entry(pir_entries[j]);
@@ -322,12 +322,12 @@ RawResponses Client::decode_responses_chunks(PIRResponseList response)
     return raw_entries;
 }
 
-std::vector<unsigned char> Client::convert_to_rawdb_entry(std::vector<uint64_t> input_list)
+vector<unsigned char> Client::convert_to_rawdb_entry(vector<uint64_t> input_list)
 {
     auto size_of_input = input_list.size();
     const int size_of_coeff = plaint_bit_count_ - 1;
     auto entry_size = pir_params_.get_entry_size();
-    std::vector<unsigned char> res(entry_size);
+    vector<unsigned char> res(entry_size);
     std::string bit_str;
 
     for (int i = 0; i < size_of_input; i++)
@@ -362,7 +362,7 @@ PIRQuery Client::gen_query(vector<uint64_t> indices)
 
     for (size_t i = 0; i < indices.size(); i++)
     {
-        PirDB plain_query(pir_dimensions.size(), std::vector<uint64_t>(polynomial_degree_, 0ULL));
+        PirDB plain_query = PirDB(pir_dimensions.size(), polynomial_degree_, 0ULL);
         uint64_t current_slot = 0;
 
         // if default value then dont create a query
@@ -398,7 +398,7 @@ PIRQuery Client::merge_pir_queries(vector<PirDB> plain_queries)
     // Initialize the plaintext and the plain query matrix
     seal::Plaintext pt;
     seal::Ciphertext ct;
-    PirDB merged_plain_query(pir_dimensions.size(), std::vector<uint64_t>(polynomial_degree_, 0ULL));
+    PirDB merged_plain_query = PirDB(pir_dimensions.size(), polynomial_degree_, 0ULL);
 
     for (int j = 0; j < pir_dimensions.size(); j++)
     {
@@ -407,14 +407,14 @@ PIRQuery Client::merge_pir_queries(vector<PirDB> plain_queries)
             auto rotate_amount = i;
             if (i >= gap_)
             {
-                plain_queries[i][j] = utils::rotate_vector_col(plain_queries[i][j]);
+                utils::rotate_vector_col(plain_queries[i][j]);
                 rotate_amount = rotate_amount - gap_;
             }
             auto rotated = utils::rotate_vector_row(plain_queries[i][j], rotate_amount);
 
             for (int k = 0; k < polynomial_degree_; k++)
             {
-                merged_plain_query[j][k] = merged_plain_query[j][k] + rotated[k];
+                merged_plain_query[j][k] += rotated[k];
             }
         }
 
@@ -444,7 +444,7 @@ PIRQuery Client::gen_query(uint64_t index)
     // Initialize the plaintext and the plain query matrix
     seal::Plaintext pt;
     seal::Ciphertext ct;
-    std::vector<std::vector<uint64_t>> plain_query(pir_dimensions.size(), std::vector<uint64_t>(polynomial_degree_, 0ULL));
+    vector<vector<uint64_t>> plain_query(pir_dimensions.size(), vector<uint64_t>(polynomial_degree_, 0ULL));
 
     // Construct the query matrix
     uint64_t current_slot = 0;

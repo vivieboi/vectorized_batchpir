@@ -1,0 +1,3 @@
+cmake -S . -B build
+cmake --build build
+./build/bin/vectorized_batch_pir

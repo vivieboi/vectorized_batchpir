@@ -61,9 +61,9 @@ void Server::populate_raw_db()
     rawdb_.resize(rounded_db_entries);
 
     // Define a function to generate a random entry
-    auto generate_random_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_random_entry = [entry_size]() -> vector<unsigned char>
     {
-        std::vector<unsigned char> entry(entry_size);
+        vector<unsigned char> entry(entry_size);
         std::generate(entry.begin(), entry.end(), []()
                       {
                           return rand() % 0xFF;
@@ -73,9 +73,9 @@ void Server::populate_raw_db()
     };
 
     // Define a function to generate a zero-filled entry
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size]() -> vector<unsigned char>
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        return vector<unsigned char>(entry_size, 1);
     };
 
     // Populate the rawdb_ vector with entries
@@ -108,9 +108,9 @@ void Server::round_db(RawDB &db)
     auto entry_size = pir_params_.get_entry_size();
 
     // Define a function to generate a zero-filled entry
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size]() -> vector<unsigned char>
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        return vector<unsigned char>(entry_size, 1);
     };
 
     for (int i = 0; i < (rounded_db_entries - db_entries); i++)
@@ -141,18 +141,18 @@ RawDB Server::populate_return_raw_db()
     RawDB rawdb(rounded_db_entries);
 
     // Define a function to generate a random entry
-    auto generate_random_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_random_entry = [entry_size]() -> vector<unsigned char>
     {
-        std::vector<unsigned char> entry(entry_size);
+        vector<unsigned char> entry(entry_size);
         std::generate(entry.begin(), entry.end(), []()
                       { return rand() % 0xFF; });
         return entry;
     };
 
     // Define a function to generate a zero-filled entry
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size]() -> vector<unsigned char>
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        return vector<unsigned char>(entry_size, 1);
     };
 
     // Populate the rawdb vector with entries
@@ -175,11 +175,7 @@ void Server::merge_pir_dbs()
 {
     const auto total_db_plaintexts = pir_params_.get_db_rows();
 
-    db_.resize(total_db_plaintexts);
-    for (auto &row : db_)
-    {
-        row.assign(polynomial_degree_, 0ULL);
-    }
+    db_ = PirDB(total_db_plaintexts, polynomial_degree_, 0ULL);
 
     for (int j = 0; j < total_db_plaintexts; j++)
     {
@@ -191,9 +187,9 @@ void Server::merge_pir_dbs()
             }
             auto rotated = utils::rotate_vector_row(db_list_[i][j], i);
 
-            for (int k = 0; k < db_[j].size(); k++)
+            for (int k = 0; k < db_.cols(); k++)
             {
-                db_[j][k] = db_[j][k] + rotated[k];
+                db_[j][k] += rotated[k];
             }
         }
     }
@@ -207,11 +203,7 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
 
     if (rotate_amount == 0)
     {
-        db_.resize(total_db_plaintexts);
-        for (auto &row : db_)
-        {
-            row.assign(polynomial_degree_, 0ULL);
-        }
+        db_ = PirDB(total_db_plaintexts, polynomial_degree_, 0ULL);
     }
 
     if (rotate_amount >= gap_)
@@ -228,9 +220,9 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
         }
         auto rotated = utils::rotate_vector_row(new_db[j], rotate_amount);
 
-        for (int k = 0; k < db_[j].size(); k++)
+        for (int k = 0; k < db_.cols(); k++)
         {
-            db_[j][k] = db_[j][k] + rotated[k];
+            db_[j][k] += rotated[k];
         }
     }
 }
@@ -253,7 +245,7 @@ void Server::convert_merge_pir_dbs()
 
     cout << endl;
     // Rotate for the rotated query trick
-    rotate_db_cols();
+    rotate_db_cols();           // TODO: come back to this
 
     // Encode the database into Plaintexts
     encode_db();
@@ -272,11 +264,7 @@ PirDB Server::convert_to_pir_db(int rawdb_index)
 
     // Initialize database
 
-    PirDB db(total_db_plaintexts);
-    for (auto &row : db)
-    {
-        row.assign(polynomial_degree_, 0ULL);
-    }
+    PirDB db = PirDB(total_db_plaintexts, polynomial_degree_, 0ULL);
     // cout  <<  "total_rawdb_entries: " << total_rawdb_entries << endl;
 
     // Populate database
@@ -314,11 +302,7 @@ void Server::transform_into_pir_db()
     const auto plaintexts_per_chunk = std::ceil(total_rawdb_entries / pir_dimensions_[0]);
 
     // Initialize database
-    db_.resize(total_db_plaintexts);
-    for (auto &row : db_)
-    {
-        row.assign(polynomial_degree_, 0ULL);
-    }
+    db_ = PirDB(total_db_plaintexts, polynomial_degree_, 0ULL);
 
     // Populate database
     for (int i = 0; i < total_rawdb_entries; ++i)
@@ -421,7 +405,7 @@ PIRResponseList Server::merge_responses_chunks_buckets(vector<PIRResponseList> &
             }
 
             // selection logic: select consecutive gap_  entries from each bucket
-            std::vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
+            vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
             std::fill_n(selection_vector.begin() + (j * current_fill), current_fill, 1ULL);
             std::fill_n(selection_vector.begin() + row_size_ + (j * current_fill), current_fill, 1ULL);
 
@@ -483,7 +467,7 @@ PIRResponseList Server::merge_responses_buckets_chunks(vector<PIRResponseList> &
             }
 
             // selection logic: select consecutive gap_  entries from each bucket
-            std::vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
+            vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
             std::fill_n(selection_vector.begin() + (i * gap_), gap_, 1ULL);
             std::fill_n(selection_vector.begin() + row_size_ + (i * gap_), gap_, 1ULL);
 
@@ -537,7 +521,7 @@ void Server::rotate_db_cols()
     {
         for (int i = 0; i < pir_dimensions_[1]; i++)
         {
-            db_[idx + i] = utils::rotate_vector_row(db_[idx + i], i * gap_);
+            utils::rotate_vector_row_inplace(db_[idx + i], i * gap_);
         }
     }
 }
@@ -545,8 +529,9 @@ void Server::rotate_db_cols()
 void Server::print_db()
 {
     int idx = 0;
-    for (const auto &row : db_)
+    for (int i = 0; i < db_.size(); i++)
     {
+        span<uint64_t> row = db_[i];
         std::cout << idx << " ";
         for (const auto &entry : row)
         {
@@ -583,7 +568,7 @@ void Server::print_encoded_db()
 {
     for (const auto &row : encoded_db_)
     {
-        std::vector<uint64_t> decoded_plain;
+        vector<uint64_t> decoded_plain;
         batch_encoder_->decode(row, decoded_plain);
 
         for (const auto &entry : decoded_plain)
@@ -651,13 +636,13 @@ void Server::ntt_preprocess_db()
     std::cout << "BatchPIRServer: Database is NTT processed!" << std::endl;
 }
 
-std::vector<uint64_t> Server::convert_to_list_of_coeff(std::vector<unsigned char> input_list)
+vector<uint64_t> Server::convert_to_list_of_coeff(vector<unsigned char> input_list)
 {
     auto size_of_input = input_list.size();
     const int size_of_coeff = plaint_bit_count_ - 1;
     const int remain = (size_of_input * 8) % size_of_coeff;
     const int cols = pir_params_.get_num_slots_per_entry();
-    std::vector<uint64_t> output_list(cols);
+    vector<uint64_t> output_list(cols);
     std::string bit_str;
 
     for (int i = 0; i < size_of_input; i++)
@@ -751,14 +736,14 @@ vector<Ciphertext> Server::process_first_dimension_delayed_mod(uint32_t client_i
     size_t coeff_count = parms.poly_modulus_degree();
     size_t coeff_mod_count = coeff_modulus.size();
     size_t encrypted_ntt_size = rotated_query[0].size();
-    std::vector<std::vector<uint128_t>> buffer(encrypted_ntt_size, std::vector<uint128_t>(coeff_count * coeff_mod_count, 0));
+    vector<vector<uint128_t>> buffer(encrypted_ntt_size, vector<uint128_t>(coeff_count * coeff_mod_count, 0));
 
     Ciphertext ct_acc;
 
     for (int col_id = 0; col_id < encoded_db_.size(); col_id += pir_dimensions_[1])
     {
 
-        std::vector<std::vector<uint128_t>> buffer(encrypted_ntt_size, std::vector<uint128_t>(coeff_count * coeff_mod_count, 1));
+        vector<vector<uint128_t>> buffer(encrypted_ntt_size, vector<uint128_t>(coeff_count * coeff_mod_count, 1));
         for (int i = 0; i < pir_dimensions_[1]; i++)
         {
             for (size_t poly_id = 0; poly_id < encrypted_ntt_size; poly_id++)
@@ -937,7 +922,7 @@ PIRResponseList Server::generate_response(uint32_t client_id, PIRQuery query)
     return response;
 }
 
-bool Server::check_decoded_entry(std::vector<unsigned char> entry, int index)
+bool Server::check_decoded_entry(vector<unsigned char> entry, int index)
 {
     if (entry.size() != rawdb_list_[1][index].size())
     {
@@ -970,7 +955,7 @@ bool Server::check_decoded_entry(std::vector<unsigned char> entry, int index)
     return result;
 }
 
-bool Server::check_decoded_entries(std::vector<std::vector<unsigned char>> entries, vector<uint64_t> indices)
+bool Server::check_decoded_entries(vector<vector<unsigned char>> entries, vector<uint64_t> indices)
 {
     for (int i = 0; i < num_databases_; i++)
     {

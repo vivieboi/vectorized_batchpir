@@ -150,16 +150,16 @@ int batchpir_main(int argc, char* argv[])
 {
     const int client_id = 0;
     //  batch size, number of entries, size of entry
-    std::vector<std::array<size_t, 3>> input_choices;
+    vector<std::array<size_t, 3>> input_choices;
     input_choices.push_back({32, 1048576, 32});
     input_choices.push_back({64, 1048576, 32});
     input_choices.push_back({256, 1048576, 32});
     
 
-    std::vector<std::chrono::milliseconds> init_times;
-    std::vector<std::chrono::milliseconds> query_gen_times;
-    std::vector<std::chrono::milliseconds> resp_gen_times;
-    std::vector<size_t> communication_list;
+    vector<std::chrono::milliseconds> init_times;
+    vector<std::chrono::milliseconds> query_gen_times;
+    vector<std::chrono::milliseconds> resp_gen_times;
+    vector<size_t> communication_list;
 
  for (size_t iteration = 0; iteration < input_choices.size(); ++iteration)
 {

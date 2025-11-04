@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 
 project(VectorizedBatchPIR)
 
@@ -26,12 +26,25 @@ add_executable(vectorized_batch_pir ${SOURCES})
 target_include_directories(vectorized_batch_pir PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Set C++ standard
-set_target_properties(vectorized_batch_pir PROPERTIES CXX_STANDARD 11)
+# set_target_properties(vectorized_batch_pir PROPERTIES CXX_STANDARD 11)
+set_target_properties(vectorized_batch_pir PROPERTIES CXX_STANDARD 20)
 
 
 # Add seal library
 find_package(SEAL 4.1 REQUIRED)
-target_link_libraries(vectorized_batch_pir SEAL::seal)
+target_link_libraries(vectorized_batch_pir SEAL::seal_shared)
+# target_link_libraries(vectorized_batch_pir SEAL::seal_shared)
+
+# Add OMP library
+set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include")
+set(OpenMP_C_LIB_NAMES "omp")
+set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include")
+set(OpenMP_CXX_LIB_NAMES "omp")
+set(OpenMP_omp_LIBRARY "/opt/homebrew/opt/libomp/lib/libomp.dylib")
+
+find_package(OpenMP REQUIRED)
+add_compile_options(-O3 -Rpass=loop-vectorize -Rpass-missed=loop-vectorize)
+target_link_libraries(vectorized_batch_pir OpenMP::OpenMP_CXX)
 
 # Add compiler flags for optimization
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")

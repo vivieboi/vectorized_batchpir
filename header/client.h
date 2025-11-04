@@ -6,6 +6,9 @@
 #include <vector>
 #include <algorithm>
 #include "pirparams.h"
+#include "pirdb.h"
+
+using namespace std;
 
 class Client {
 public:
@@ -20,9 +23,9 @@ public:
     PIRQuery gen_query(vector<uint64_t> indices);
     seal::KeyGenerator* get_keygen();
     vector<uint64_t> get_entry_list();
-    std::vector<unsigned char> decode_response(PIRResponseList response);
+    vector<unsigned char> decode_response(PIRResponseList response);
     RawResponses decode_responses(PIRResponseList response);
-    std::vector<std::vector<unsigned char>> single_pir_decode_responses(PIRResponseList response);
+    vector<vector<unsigned char>> single_pir_decode_responses(PIRResponseList response);
     RawResponses decode_responses_chunks(PIRResponseList response);
     vector<RawResponses> decode_merged_responses(PIRResponseList response, size_t cuckoo_size,vector<vector<uint64_t>> entry_slot_lists);
 
@@ -48,8 +51,8 @@ private:
     size_t num_databases_;
 
     // Private member functions
-    std::vector<size_t> compute_indices(uint64_t desired_index);
-    std::vector<unsigned char> convert_to_rawdb_entry(std::vector<uint64_t>  input_list);
+    vector<size_t> compute_indices(uint64_t desired_index);
+    vector<unsigned char> convert_to_rawdb_entry(vector<uint64_t>  input_list);
     PIRQuery merge_pir_queries(vector<PirDB> plain_queries);
     void check_noise_budget(const seal::Ciphertext& response); 
 };

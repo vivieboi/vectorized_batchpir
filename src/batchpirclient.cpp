@@ -8,7 +8,7 @@ BatchPIRClient::BatchPIRClient(const BatchPirParams &params)
     prepare_pir_clients();
 }
 
-bool BatchPIRClient::cuckoo_insert(uint64_t key, size_t attempt, std::unordered_map<uint64_t, std::vector<size_t>> key_to_buckets, std::unordered_map<uint64_t, uint64_t> &bucket_to_key)
+bool BatchPIRClient::cuckoo_insert(uint64_t key, size_t attempt, std::unordered_map<uint64_t, vector<size_t>> key_to_buckets, std::unordered_map<uint64_t, uint64_t> &bucket_to_key)
 {
     if (attempt > max_attempts_)
     {
@@ -25,7 +25,7 @@ bool BatchPIRClient::cuckoo_insert(uint64_t key, size_t attempt, std::unordered_
         }
     }
 
-    std::vector<size_t> candidate_buckets = key_to_buckets[key];
+    vector<size_t> candidate_buckets = key_to_buckets[key];
     int idx = rand() % candidate_buckets.size();
     auto picked_bucket = candidate_buckets[idx];
     auto old = bucket_to_key[picked_bucket];
@@ -89,7 +89,7 @@ bool BatchPIRClient::cuckoo_hash(vector<uint64_t> batch)
 
     cuckoo_table_.resize(std::ceil(batchpir_params_.get_batch_size() * batchpir_params_.get_cuckoo_factor()), batchpir_params_.get_default_value());
 
-    std::unordered_map<uint64_t, std::vector<size_t>> key_to_buckets;
+    std::unordered_map<uint64_t, vector<size_t>> key_to_buckets;
     for (auto v : batch)
     {
         auto candidates = utils::get_candidate_buckets(v, num_candidates, total_buckets);
@@ -134,7 +134,7 @@ bool BatchPIRClient::cuckoo_hash_witout_checks(vector<uint64_t> batch)
 
     cuckoo_table_.resize(std::ceil(batchpir_params_.get_batch_size() * batchpir_params_.get_cuckoo_factor()), batchpir_params_.get_default_value());
 
-    std::unordered_map<uint64_t, std::vector<size_t>> key_to_buckets;
+    std::unordered_map<uint64_t, vector<size_t>> key_to_buckets;
     for (auto v : batch)
     {
         auto candidates = utils::get_candidate_buckets(v, num_candidates, total_buckets);
@@ -243,10 +243,10 @@ void BatchPIRClient::prepare_pir_clients()
 
 vector<RawDB> BatchPIRClient::decode_responses(vector<PIRResponseList> responses)
 {
-    vector<std::vector<std::vector<unsigned char>>> entries_list;
+    vector<vector<vector<unsigned char>>> entries_list;
     for (int i = 0; i < responses.size(); i++)
     {
-        std::vector<std::vector<unsigned char>> entries = client_list_[i].decode_responses(responses[i]);
+        vector<vector<unsigned char>> entries = client_list_[i].decode_responses(responses[i]);
         entries_list.push_back(entries);
     }
     return entries_list;
@@ -254,7 +254,7 @@ vector<RawDB> BatchPIRClient::decode_responses(vector<PIRResponseList> responses
 
 vector<RawDB> BatchPIRClient::decode_responses_chunks(PIRResponseList responses)
 {
-    vector<std::vector<std::vector<unsigned char>>> entries_list;
+    vector<vector<vector<unsigned char>>> entries_list;
     const size_t num_slots_per_entry = batchpir_params_.get_num_slots_per_entry();
     const size_t num_slots_per_entry_rounded = utils::next_power_of_two(num_slots_per_entry);
     const size_t max_empty_slots = batchpir_params_.get_first_dimension_size();
@@ -275,7 +275,7 @@ vector<RawDB> BatchPIRClient::decode_responses_chunks(PIRResponseList responses)
         {
             auto start_idx = (i * num_chunk_ctx);
             PIRResponseList subvector(responses.begin() + start_idx, responses.begin() + start_idx + num_chunk_ctx);
-            std::vector<std::vector<unsigned char>> entries = client_list_[i].decode_responses(subvector);
+            vector<vector<unsigned char>> entries = client_list_[i].decode_responses(subvector);
             entries_list.push_back(entries);
         }
     }
@@ -284,7 +284,7 @@ vector<RawDB> BatchPIRClient::decode_responses_chunks(PIRResponseList responses)
         vector<vector<uint64_t>> entry_slot_lists;
         for (int i = 0; i < client_list_.size(); i++)
         {
-            entry_slot_lists.push_back(client_list_[i].get_entry_list());
+            entry_slot_lists.push_back(client_list_[i].get_entry_list());       // These are of different lengths -> don't represent as PirDB
         }
 
         entries_list = client_list_[0].decode_merged_responses(responses, cuckoo_table_.size(), entry_slot_lists);

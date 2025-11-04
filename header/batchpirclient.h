@@ -36,7 +36,7 @@ private:
     bool cuckoo_hash(vector<uint64_t> batch);
     void translate_cuckoo();
     void prepare_pir_clients();
-    bool cuckoo_insert(uint64_t key, size_t attempt, std::unordered_map<uint64_t, std::vector<size_t>> key_to_buckets, std::unordered_map<uint64_t, uint64_t>& bucket_to_key);
+    bool cuckoo_insert(uint64_t key, size_t attempt, std::unordered_map<uint64_t, vector<size_t>> key_to_buckets, std::unordered_map<uint64_t, uint64_t>& bucket_to_key);
 };
 
 #endif // BATCHPIRCLIENT_H
