@@ -189,16 +189,12 @@ void Server::merge_pir_dbs()
 {
     const auto total_db_plaintexts = pir_params_.get_db_rows();
 
-    db_.resize(total_db_plaintexts);
-    for (auto &row : db_)
-    {
-        row.assign(polynomial_degree_, 0ULL);
-    }
+    db_ = PirDB(total_db_plaintexts, polynomial_degree_, 0ULL);
 
     #pragma omp parallel for
     for (int j = 0; j < total_db_plaintexts; j++)
     {
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (int i = 0; i < db_list_.size(); i++)
         {
             if (i > gap_)
@@ -207,10 +203,10 @@ void Server::merge_pir_dbs()
             }
             auto rotated = utils::rotate_vector_row(db_list_[i][j], i);
 
-            #pragma omp parallel for schedule(static)
+            // #pragma omp parallel for schedule(static)
             for (int k = 0; k < db_[j].size(); k++)
             {
-                db_[j][k] = db_[j][k] + rotated[k];
+                db_[j][k] += rotated[k];
             }
         }
     }
@@ -224,13 +220,7 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
 
     if (rotate_amount == 0)
     {
-        db_.resize(total_db_plaintexts);
-
-        #pragma omp parallel for schedule(static)
-        for (auto &row : db_)
-        {
-            row.assign(polynomial_degree_, 0ULL);
-        }
+        db_ = PirDB(total_db_plaintexts, polynomial_degree_, 0ULL);
     }
 
     if (rotate_amount >= gap_)
@@ -251,7 +241,7 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
         // #pragma omp parallel for schedule(static)
         for (int k = 0; k < db_[j].size(); k++)
         {
-            db_[j][k] = db_[j][k] + rotated[k];
+            db_[j][k] += rotated[k];
         }
     }
 }
@@ -276,7 +266,7 @@ void Server::convert_merge_pir_dbs()
 
     cout << endl;
     // Rotate for the rotated query trick
-    rotate_db_cols();
+    rotate_db_cols();           // TODO: come back to this
 
     // Encode the database into Plaintexts
     encode_db();
@@ -295,12 +285,7 @@ PirDB Server::convert_to_pir_db(int rawdb_index)
 
     // Initialize database
 
-    PirDB db(total_db_plaintexts);
-    #pragma omp parallel for schedule(static)
-    for (auto &row : db)
-    {
-        row.assign(polynomial_degree_, 0ULL);
-    }
+    PirDB db = PirDB(total_db_plaintexts, polynomial_degree_, 0ULL);
     // cout  <<  "total_rawdb_entries: " << total_rawdb_entries << endl;
 
     // Populate database
@@ -340,11 +325,7 @@ void Server::transform_into_pir_db()
     const auto plaintexts_per_chunk = std::ceil(total_rawdb_entries / pir_dimensions_[0]);
 
     // Initialize database
-    db_.resize(total_db_plaintexts);
-    for (auto &row : db_)
-    {
-        row.assign(polynomial_degree_, 0ULL);
-    }
+    db_ = PirDB(total_db_plaintexts, polynomial_degree_, 0ULL);
 
     // Populate database
     #pragma omp parallel for schedule(static)           // TODO: is this okay to parallelize, since we are writing?
@@ -565,7 +546,7 @@ void Server::rotate_db_cols()
     {
         for (int i = 0; i < pir_dimensions_[1]; i++)
         {
-            db_[idx + i] = utils::rotate_vector_row(db_[idx + i], i * gap_);
+            utils::rotate_vector_row_inplace(db_[idx + i], i * gap_);
         }
     }
 }
@@ -573,8 +554,9 @@ void Server::rotate_db_cols()
 void Server::print_db()
 {
     int idx = 0;
-    for (const auto &row : db_)
+    for (int i = 0; i < db_.size(); i++)
     {
+        span<uint64_t> row = db_[i];
         std::cout << idx << " ";
         for (const auto &entry : row)
         {

@@ -118,6 +118,7 @@ vector<vector<uint64_t>> BatchPIRServer::simeple_hash_with_map()
     auto num_candidates = batchpir_params_->get_num_hash_funcs();
     buckets_.resize(total_buckets);
 
+    // TODO: represent as PirDB object?
     vector<vector<uint64_t>> map(total_buckets);
 
     for (int i = 0; i < db_entries; i++)

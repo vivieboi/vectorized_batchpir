@@ -388,7 +388,7 @@ PIRQuery Client::gen_query(vector<uint64_t> indices)
 
     for (size_t i = 0; i < indices.size(); i++)
     {
-        PirDB plain_query(pir_dimensions.size(), vector<uint64_t>(polynomial_degree_, 0ULL));
+        PirDB plain_query = PirDB(pir_dimensions.size(), polynomial_degree_, 0ULL);
         uint64_t current_slot = 0;
 
         // if default value then dont create a query
@@ -424,7 +424,7 @@ PIRQuery Client::merge_pir_queries(vector<PirDB> plain_queries)
     // Initialize the plaintext and the plain query matrix
     seal::Plaintext pt;
     seal::Ciphertext ct;
-    PirDB merged_plain_query(pir_dimensions.size(), vector<uint64_t>(polynomial_degree_, 0ULL));
+    PirDB merged_plain_query = PirDB(pir_dimensions.size(), polynomial_degree_, 0ULL);
 
     for (int j = 0; j < pir_dimensions.size(); j++)
     {
@@ -433,14 +433,14 @@ PIRQuery Client::merge_pir_queries(vector<PirDB> plain_queries)
             auto rotate_amount = i;
             if (i >= gap_)
             {
-                plain_queries[i][j] = utils::rotate_vector_col(plain_queries[i][j]);
+                utils::rotate_vector_col(plain_queries[i][j]);
                 rotate_amount = rotate_amount - gap_;
             }
             auto rotated = utils::rotate_vector_row(plain_queries[i][j], rotate_amount);
 
             for (int k = 0; k < polynomial_degree_; k++)
             {
-                merged_plain_query[j][k] = merged_plain_query[j][k] + rotated[k];
+                merged_plain_query[j][k] += rotated[k];
             }
         }
 

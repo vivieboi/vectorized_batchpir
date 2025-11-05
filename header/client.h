@@ -7,6 +7,9 @@
 #include <algorithm>
 #include "pirparams.h"
 #include "rawdb.h"
+#include "pirdb.h"
+
+using namespace std;
 
 class Client {
 public:

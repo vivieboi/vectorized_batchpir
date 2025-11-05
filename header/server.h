@@ -7,9 +7,11 @@
 #include <chrono>
 #include "pirparams.h"
 #include "rawdb.h"
+#include "pirdb.h"
 
 using namespace seal;
 using namespace utils;
+using namespace std;
 
 class Server {
 public:

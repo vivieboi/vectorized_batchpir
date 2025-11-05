@@ -13,6 +13,7 @@
 
 using namespace std;
 
+using namespace std;
 
 typedef  vector<seal::Ciphertext> PIRQuery;
 typedef  seal::Ciphertext PIRResponse;
@@ -20,8 +21,8 @@ typedef  vector<seal::Ciphertext> PIRResponseList;
 // typedef  vector<vector<unsigned char>>  RawDB;
 // typedef  vector<vector<unsigned char>>  RawResponses;     // TODO: is this the same as a RawDB object?
 typedef RawDB RawResponses;
-typedef  vector<uint64_t> Row;
-typedef  vector<Row> PirDB;
+// typedef  vector<uint64_t> Row;
+// typedef  vector<Row> PirDB;
 using namespace std;
 using namespace seal;
 
@@ -59,6 +60,23 @@ namespace utils {
         rotation_Amount = rotation_Amount % row_size;
 
         vector<uint64_t> temp(vec.size(), 0ULL);
+        for (size_t i = 0; i < row_size; ++i) {
+            temp[(i + rotation_Amount) % row_size] = vec[i];
+            temp[(i + rotation_Amount) % row_size + row_size] = vec[i + row_size];
+        }
+        return temp;
+    }
+
+    // Version that takes a span
+    inline vector<uint64_t> rotate_vector_row(span<uint64_t> vec, int rotation_Amount) {
+        if (vec.empty()) {
+            return {};
+        }
+
+        const size_t row_size = vec.size()/2;
+        rotation_Amount = rotation_Amount % row_size;
+
+        vector<uint64_t> temp(vec.size(), 0ULL);
 
         #pragma omp parallel for schedule(static)
         for (size_t i = 0; i < row_size; ++i) {
@@ -66,6 +84,21 @@ namespace utils {
             temp[(i + rotation_Amount) % row_size + row_size] = vec[i + row_size];
         }
         return temp;
+    }
+
+    // To rotate the row in place
+    inline void rotate_vector_row_inplace(span<uint64_t> vec, int rotation_Amount) {
+        if (vec.empty()) {
+            return;
+        }
+
+        const size_t row_size = vec.size()/2;
+        rotation_Amount = rotation_Amount % row_size;
+
+        for (size_t i = 0; i < row_size; ++i) {
+            vec[(i + rotation_Amount) % row_size] = vec[i];
+            vec[(i + rotation_Amount) % row_size + row_size] = vec[i + row_size];
+        }
     }
 
     inline vector<uint64_t> rotate_vector_col(vector<uint64_t>& vec) {
@@ -85,6 +118,22 @@ namespace utils {
         }
       
     return vec;
+    }
+
+    // Version that handles span, directly modifies PirDB objects
+    inline void rotate_vector_col(span<uint64_t> vec) {
+        if (vec.empty()) {
+            return;
+        }
+
+        const size_t row_size = vec.size()/2;
+        
+        uint64_t tmp_slot = 0;
+        for (size_t i = 0; i < row_size; ++i) {
+            tmp_slot = vec[i];
+            vec[i] = vec[row_size + i];
+            vec[row_size + i] = tmp_slot;
+        }
     }
     
     inline std::size_t hash_mod(size_t id, size_t nonce, size_t data, size_t total_buckets){

@@ -284,7 +284,7 @@ vector<RawDB> BatchPIRClient::decode_responses_chunks(PIRResponseList responses)
         vector<vector<uint64_t>> entry_slot_lists;
         for (int i = 0; i < client_list_.size(); i++)
         {
-            entry_slot_lists.push_back(client_list_[i].get_entry_list());
+            entry_slot_lists.push_back(client_list_[i].get_entry_list());       // These are of different lengths -> don't represent as PirDB
         }
 
         entries_list = client_list_[0].decode_merged_responses(responses, cuckoo_table_.size(), entry_slot_lists);
