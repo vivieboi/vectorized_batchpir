@@ -63,6 +63,7 @@ void Server::populate_raw_db()
     // Define a function to generate a random entry
     auto generate_random_entry = [entry_size](span<unsigned char> rawdb_row) -> void
     {
+        #pragma omp parallel for schedule(static)
         for (int i = 0; i < entry_size; i++) {
             rawdb_row[i] = rand() % 0xFF;
         }
@@ -71,6 +72,7 @@ void Server::populate_raw_db()
     // Define a function to generate a zero-filled entry
     auto generate_one_entry = [entry_size](span<unsigned char> rawdb_row) -> void
     {
+        #pragma omp parallel for schedule(static)
         for (int i = 0; i < entry_size; i++) {
             rawdb_row[i] = 1;
         }
@@ -78,6 +80,7 @@ void Server::populate_raw_db()
 
     // Populate the rawdb_ vector with entries
     rawdb_ = RawDB(rounded_db_entries, entry_size);
+    #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < rounded_db_entries; ++i)
     {
         if (i < db_entries)
@@ -94,6 +97,7 @@ void Server::populate_raw_db()
 ///   data functions to be used with bathcpir server
 void Server::round_dbs()
 {
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < rawdb_list_.size(); i++)
     {
         round_db(rawdb_list_[i]);
@@ -109,6 +113,7 @@ void Server::round_db(RawDB &db)
     // Define a function to generate a zero-filled entry
     auto generate_one_entry = [entry_size](span<unsigned char> rawdb_row) -> void
     {
+        #pragma omp parallel for schedule(static)
         for (int i = 0; i < entry_size; i++) {
             rawdb_row[i] = 1;
         }
@@ -116,6 +121,7 @@ void Server::round_db(RawDB &db)
 
     db.resize(rounded_db_entries);      // Resize it to the right # of entries
 
+    #pragma omp parallel for schedule(static)
     for (int i = db_entries; i < rounded_db_entries; i++)
     {
         generate_one_entry(db[i]);      // TODO: double-check this logic
@@ -128,6 +134,7 @@ void Server::load_raw_dbs()
     rawdb_list_.clear();
     rawdb_list_.resize(num_databases_);
 
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < rawdb_list_.size(); i++)
     {
         rawdb_list_[i] = populate_return_raw_db();
@@ -144,6 +151,7 @@ RawDB Server::populate_return_raw_db()
     // Define a function to generate a random entry
     auto generate_random_entry = [entry_size](span<unsigned char> row) -> void
     {
+        #pragma omp parallel for schedule(static)
         for (int i = 0; i < entry_size; i++) {
             row[i] = rand() % 0xFF;
         }
@@ -152,6 +160,7 @@ RawDB Server::populate_return_raw_db()
     // Define a function to generate a zero-filled entry
     auto generate_one_entry = [entry_size](span<unsigned char> row) -> void
     {
+        #pragma omp parallel for schedule(static)
         for (int i = 0; i < entry_size; i++) {
             row[i] = 1;
         }
@@ -160,6 +169,7 @@ RawDB Server::populate_return_raw_db()
     RawDB rawdb = RawDB(rounded_db_entries, entry_size);
 
     // Populate the rawdb vector with entries
+    #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < rounded_db_entries; ++i)
     {
         if (i < db_entries)
@@ -185,8 +195,10 @@ void Server::merge_pir_dbs()
         row.assign(polynomial_degree_, 0ULL);
     }
 
+    #pragma omp parallel for
     for (int j = 0; j < total_db_plaintexts; j++)
     {
+        #pragma omp parallel for
         for (int i = 0; i < db_list_.size(); i++)
         {
             if (i > gap_)
@@ -195,6 +207,7 @@ void Server::merge_pir_dbs()
             }
             auto rotated = utils::rotate_vector_row(db_list_[i][j], i);
 
+            #pragma omp parallel for schedule(static)
             for (int k = 0; k < db_[j].size(); k++)
             {
                 db_[j][k] = db_[j][k] + rotated[k];
@@ -212,6 +225,8 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
     if (rotate_amount == 0)
     {
         db_.resize(total_db_plaintexts);
+
+        #pragma omp parallel for schedule(static)
         for (auto &row : db_)
         {
             row.assign(polynomial_degree_, 0ULL);
@@ -223,6 +238,7 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
         rotate_amount = rotate_amount - gap_;
     }
 
+    #pragma omp parallel for
     for (int j = 0; j < total_db_plaintexts; j++)
     {
 
@@ -232,6 +248,7 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
         }
         auto rotated = utils::rotate_vector_row(new_db[j], rotate_amount);
 
+        // #pragma omp parallel for schedule(static)
         for (int k = 0; k < db_[j].size(); k++)
         {
             db_[j][k] = db_[j][k] + rotated[k];
@@ -248,8 +265,10 @@ void Server::convert_merge_pir_dbs()
     std::cout << "BatchPIRServer: Converting and merging databases. This may take some time..." << std::endl;
 
     // Convert and merge each raw database into uint_64 PIR elements
+    // NOT PARALLEL SAFE
     for (int i = 0; i < num_databases_; i++)
     {
+        // TODO: this part should be sped up
         auto db = convert_to_pir_db(i);
         merge_to_db(db, i);
         std::cout << "BatchPIRServer: Processed database " << i + 1 << " of " << num_databases_ << "\r" << std::flush;
@@ -277,6 +296,7 @@ PirDB Server::convert_to_pir_db(int rawdb_index)
     // Initialize database
 
     PirDB db(total_db_plaintexts);
+    #pragma omp parallel for schedule(static)
     for (auto &row : db)
     {
         row.assign(polynomial_degree_, 0ULL);
@@ -293,6 +313,7 @@ PirDB Server::convert_to_pir_db(int rawdb_index)
         int plaintext_idx = i / pir_dimensions_[0];
         const int slot = (i * gap_) % row_size_;
 
+        // #pragma omp parallel for schedule(static)       // TODO: can this be parallelized since we are writing?
         for (int j = 0; j < num_columns_per_entry; j++)
         {
 
@@ -325,9 +346,8 @@ void Server::transform_into_pir_db()
         row.assign(polynomial_degree_, 0ULL);
     }
 
-    
-
     // Populate database
+    #pragma omp parallel for schedule(static)           // TODO: is this okay to parallelize, since we are writing?
     for (int i = 0; i < total_rawdb_entries; ++i)
     {
         auto coeffs = convert_to_list_of_coeff(rawdb_[i]);
@@ -335,6 +355,7 @@ void Server::transform_into_pir_db()
         int plaintext_idx = i / pir_dimensions_[0];
         const int slot = (i * gap_) % row_size_;
 
+        #pragma omp parallel for schedule(static)
         for (int j = 0; j < num_columns_per_entry; j++)
         {
 
@@ -343,7 +364,7 @@ void Server::transform_into_pir_db()
                 // Handle out-of-bounds access
                 std::cerr << "Error: Out-of-bounds access at ciphertext_idx = " << plaintext_idx
                           << ", slot = " << slot << std::endl;
-                return;
+                // return;      // TODO: come back to this, just commented it out to parallelize
             }
             db_[plaintext_idx][slot] = coeffs[j];
             plaintext_idx += plaintexts_per_chunk;
@@ -712,6 +733,7 @@ vector<uint64_t> Server::convert_to_list_of_coeff(std::span<unsigned char> input
             bit_str += "1";
     }
 
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < cols; i++)
     {
         uint64_t value = 0;
