@@ -198,7 +198,7 @@ void Server::merge_pir_dbs()
     #pragma omp parallel for
     for (int j = 0; j < total_db_plaintexts; j++)
     {
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (int i = 0; i < db_list_.size(); i++)
         {
             if (i > gap_)
@@ -207,7 +207,7 @@ void Server::merge_pir_dbs()
             }
             auto rotated = utils::rotate_vector_row(db_list_[i][j], i);
 
-            #pragma omp parallel for schedule(static)
+            // #pragma omp parallel for schedule(static)
             for (int k = 0; k < db_[j].size(); k++)
             {
                 db_[j][k] = db_[j][k] + rotated[k];
@@ -341,6 +341,7 @@ void Server::transform_into_pir_db()
 
     // Initialize database
     db_.resize(total_db_plaintexts);
+    #pragma omp parallel for schedule(static)
     for (auto &row : db_)
     {
         row.assign(polynomial_degree_, 0ULL);
@@ -355,7 +356,7 @@ void Server::transform_into_pir_db()
         int plaintext_idx = i / pir_dimensions_[0];
         const int slot = (i * gap_) % row_size_;
 
-        #pragma omp parallel for schedule(static)
+        // #pragma omp parallel for schedule(static)
         for (int j = 0; j < num_columns_per_entry; j++)
         {
 
