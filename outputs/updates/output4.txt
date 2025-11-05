@@ -1,0 +1,183 @@
+***************************************************
+             Starting example 1               
+***************************************************
++---------------------------------------------------+
+|               ENCRYPTION PARAMETERS               |
++---------------------------------------------------+
+|  seal_params_.poly_modulus_degree  = 8192
+|  seal_params_.coeff_modulus().bit_count   = [42 + 58 + 58 + 60] bits
+|  seal_params_.coeff_modulus().size = 4
+|  seal_params_.plain_modulus().bit_count = 28
++---------------------------------------------------+
++---------------------------------------------------+
+|                  Batch Parameters                 |
++---------------------------------------------------+
+| num_hash_funcs_:  3
+| batch_size_:      32
+| cuckoo_factor_:   1.2
+| num_entries_:     1048576
+| max_attempts_:    500
++---------------------------------------------------+
+BatchPIRServer: Populating raw database...
+BatchPIRServer: Raw database populated.
+BatchPIRServer: Performing simple hash and bucket balancing...
+BatchPIRServer: Simple hash and balancing completed.
+BatchPIRServer: Preparing PIR servers......
++---------------------------------------------------+
+|                 PIR PARAMETERS                    |
++---------------------------------------------------+
+|  num_entries_                  = 81394
+|  num_rounded_entries_          = 81920
+|  entry_size_                   = 32
+|  num_columns_per_entry_        = 10
+|  db_ptx_                       = 6400
+|  dimensions_                   = [ 128 128 5 ]
++---------------------------------------------------+
+BatchPIRServer: Converting and merging databases. This may take some time...
+BatchPIRServer: Processed database 1 of 39BatchPIRServer: Processed database 2 of 39BatchPIRServer: Processed database 3 of 39BatchPIRServer: Processed database 4 of 39BatchPIRServer: Processed database 5 of 39BatchPIRServer: Processed database 6 of 39BatchPIRServer: Processed database 7 of 39BatchPIRServer: Processed database 8 of 39BatchPIRServer: Processed database 9 of 39BatchPIRServer: Processed database 10 of 39BatchPIRServer: Processed database 11 of 39BatchPIRServer: Processed database 12 of 39BatchPIRServer: Processed database 13 of 39BatchPIRServer: Processed database 14 of 39BatchPIRServer: Processed database 15 of 39BatchPIRServer: Processed database 16 of 39BatchPIRServer: Processed database 17 of 39BatchPIRServer: Processed database 18 of 39BatchPIRServer: Processed database 19 of 39BatchPIRServer: Processed database 20 of 39BatchPIRServer: Processed database 21 of 39BatchPIRServer: Processed database 22 of 39BatchPIRServer: Processed database 23 of 39BatchPIRServer: Processed database 24 of 39BatchPIRServer: Processed database 25 of 39BatchPIRServer: Processed database 26 of 39BatchPIRServer: Processed database 27 of 39BatchPIRServer: Processed database 28 of 39BatchPIRServer: Processed database 29 of 39BatchPIRServer: Processed database 30 of 39BatchPIRServer: Processed database 31 of 39BatchPIRServer: Processed database 32 of 39BatchPIRServer: Processed database 33 of 39BatchPIRServer: Processed database 34 of 39BatchPIRServer: Processed database 35 of 39BatchPIRServer: Processed database 36 of 39BatchPIRServer: Processed database 37 of 39BatchPIRServer: Processed database 38 of 39BatchPIRServer: Processed database 39 of 39
+BatchPIRServer: Database converted to PIR DB and merged successfully!
+BatchPIRServer: Database is NTT processed!
+BatchPIRServer: PIR servers preparation complete.
+Main: Starting query generation for example 1...
+Main: Query generation complete for example 1.
+Main: Starting response generation for example 1...
+Main: Response generation complete for example 1.
+Main: Checking decoded entries for example 1...
+Main: Noise budget left in the response: 3
+
+Main: All the entries matched for example 1!!
+
+***************************************************
+             Starting example 2               
+***************************************************
++---------------------------------------------------+
+|               ENCRYPTION PARAMETERS               |
++---------------------------------------------------+
+|  seal_params_.poly_modulus_degree  = 8192
+|  seal_params_.coeff_modulus().bit_count   = [42 + 58 + 58 + 60] bits
+|  seal_params_.coeff_modulus().size = 4
+|  seal_params_.plain_modulus().bit_count = 28
++---------------------------------------------------+
++---------------------------------------------------+
+|                  Batch Parameters                 |
++---------------------------------------------------+
+| num_hash_funcs_:  3
+| batch_size_:      64
+| cuckoo_factor_:   1.2
+| num_entries_:     1048576
+| max_attempts_:    500
++---------------------------------------------------+
+BatchPIRServer: Populating raw database...
+BatchPIRServer: Raw database populated.
+BatchPIRServer: Performing simple hash and bucket balancing...
+BatchPIRServer: Simple hash and balancing completed.
+BatchPIRServer: Preparing PIR servers......
++---------------------------------------------------+
+|                 PIR PARAMETERS                    |
++---------------------------------------------------+
+|  num_entries_                  = 41328
+|  num_rounded_entries_          = 45056
+|  entry_size_                   = 32
+|  num_columns_per_entry_        = 10
+|  db_ptx_                       = 7040
+|  dimensions_                   = [ 64 64 11 ]
++---------------------------------------------------+
+BatchPIRServer: Converting and merging databases. This may take some time...
+BatchPIRServer: Processed database 1 of 77BatchPIRServer: Processed database 2 of 77BatchPIRServer: Processed database 3 of 77BatchPIRServer: Processed database 4 of 77BatchPIRServer: Processed database 5 of 77BatchPIRServer: Processed database 6 of 77BatchPIRServer: Processed database 7 of 77BatchPIRServer: Processed database 8 of 77BatchPIRServer: Processed database 9 of 77BatchPIRServer: Processed database 10 of 77BatchPIRServer: Processed database 11 of 77BatchPIRServer: Processed database 12 of 77BatchPIRServer: Processed database 13 of 77BatchPIRServer: Processed database 14 of 77BatchPIRServer: Processed database 15 of 77BatchPIRServer: Processed database 16 of 77BatchPIRServer: Processed database 17 of 77BatchPIRServer: Processed database 18 of 77BatchPIRServer: Processed database 19 of 77BatchPIRServer: Processed database 20 of 77BatchPIRServer: Processed database 21 of 77BatchPIRServer: Processed database 22 of 77BatchPIRServer: Processed database 23 of 77BatchPIRServer: Processed database 24 of 77BatchPIRServer: Processed database 25 of 77BatchPIRServer: Processed database 26 of 77BatchPIRServer: Processed database 27 of 77BatchPIRServer: Processed database 28 of 77BatchPIRServer: Processed database 29 of 77BatchPIRServer: Processed database 30 of 77BatchPIRServer: Processed database 31 of 77BatchPIRServer: Processed database 32 of 77BatchPIRServer: Processed database 33 of 77BatchPIRServer: Processed database 34 of 77BatchPIRServer: Processed database 35 of 77BatchPIRServer: Processed database 36 of 77BatchPIRServer: Processed database 37 of 77BatchPIRServer: Processed database 38 of 77BatchPIRServer: Processed database 39 of 77BatchPIRServer: Processed database 40 of 77BatchPIRServer: Processed database 41 of 77BatchPIRServer: Processed database 42 of 77BatchPIRServer: Processed database 43 of 77BatchPIRServer: Processed database 44 of 77BatchPIRServer: Processed database 45 of 77BatchPIRServer: Processed database 46 of 77BatchPIRServer: Processed database 47 of 77BatchPIRServer: Processed database 48 of 77BatchPIRServer: Processed database 49 of 77BatchPIRServer: Processed database 50 of 77BatchPIRServer: Processed database 51 of 77BatchPIRServer: Processed database 52 of 77BatchPIRServer: Processed database 53 of 77BatchPIRServer: Processed database 54 of 77BatchPIRServer: Processed database 55 of 77BatchPIRServer: Processed database 56 of 77BatchPIRServer: Processed database 57 of 77BatchPIRServer: Processed database 58 of 77BatchPIRServer: Processed database 59 of 77BatchPIRServer: Processed database 60 of 77BatchPIRServer: Processed database 61 of 77BatchPIRServer: Processed database 62 of 77BatchPIRServer: Processed database 63 of 77BatchPIRServer: Processed database 64 of 77BatchPIRServer: Processed database 65 of 77BatchPIRServer: Processed database 66 of 77BatchPIRServer: Processed database 67 of 77BatchPIRServer: Processed database 68 of 77BatchPIRServer: Processed database 69 of 77BatchPIRServer: Processed database 70 of 77BatchPIRServer: Processed database 71 of 77BatchPIRServer: Processed database 72 of 77BatchPIRServer: Processed database 73 of 77BatchPIRServer: Processed database 74 of 77BatchPIRServer: Processed database 75 of 77BatchPIRServer: Processed database 76 of 77BatchPIRServer: Processed database 77 of 77
+BatchPIRServer: Database converted to PIR DB and merged successfully!
+BatchPIRServer: Database is NTT processed!
+BatchPIRServer: PIR servers preparation complete.
+Main: Starting query generation for example 2...
+Main: Query generation complete for example 2.
+Main: Starting response generation for example 2...
+Main: Response generation complete for example 2.
+Main: Checking decoded entries for example 2...
+Main: Noise budget left in the response: 3
+
+Main: All the entries matched for example 2!!
+
+***************************************************
+             Starting example 3               
+***************************************************
++---------------------------------------------------+
+|               ENCRYPTION PARAMETERS               |
++---------------------------------------------------+
+|  seal_params_.poly_modulus_degree  = 8192
+|  seal_params_.coeff_modulus().bit_count   = [55 + 55 + 48 + 60] bits
+|  seal_params_.coeff_modulus().size = 4
+|  seal_params_.plain_modulus().bit_count = 22
++---------------------------------------------------+
++---------------------------------------------------+
+|                  Batch Parameters                 |
++---------------------------------------------------+
+| num_hash_funcs_:  3
+| batch_size_:      256
+| cuckoo_factor_:   1.2
+| num_entries_:     1048576
+| max_attempts_:    500
++---------------------------------------------------+
+BatchPIRServer: Populating raw database...
+BatchPIRServer: Raw database populated.
+BatchPIRServer: Performing simple hash and bucket balancing...
+BatchPIRServer: Simple hash and balancing completed.
+BatchPIRServer: Preparing PIR servers......
++---------------------------------------------------+
+|                 PIR PARAMETERS                    |
++---------------------------------------------------+
+|  num_entries_                  = 10528
+|  num_rounded_entries_          = 11264
+|  entry_size_                   = 32
+|  num_columns_per_entry_        = 13
+|  db_ptx_                       = 4576
+|  dimensions_                   = [ 32 32 11 ]
++---------------------------------------------------+
+BatchPIRServer: Converting and merging databases. This may take some time...
+BatchPIRServer: Processed database 1 of 256BatchPIRServer: Processed database 2 of 256BatchPIRServer: Processed database 3 of 256BatchPIRServer: Processed database 4 of 256BatchPIRServer: Processed database 5 of 256BatchPIRServer: Processed database 6 of 256BatchPIRServer: Processed database 7 of 256BatchPIRServer: Processed database 8 of 256BatchPIRServer: Processed database 9 of 256BatchPIRServer: Processed database 10 of 256BatchPIRServer: Processed database 11 of 256BatchPIRServer: Processed database 12 of 256BatchPIRServer: Processed database 13 of 256BatchPIRServer: Processed database 14 of 256BatchPIRServer: Processed database 15 of 256BatchPIRServer: Processed database 16 of 256BatchPIRServer: Processed database 17 of 256BatchPIRServer: Processed database 18 of 256BatchPIRServer: Processed database 19 of 256BatchPIRServer: Processed database 20 of 256BatchPIRServer: Processed database 21 of 256BatchPIRServer: Processed database 22 of 256BatchPIRServer: Processed database 23 of 256BatchPIRServer: Processed database 24 of 256BatchPIRServer: Processed database 25 of 256BatchPIRServer: Processed database 26 of 256BatchPIRServer: Processed database 27 of 256BatchPIRServer: Processed database 28 of 256BatchPIRServer: Processed database 29 of 256BatchPIRServer: Processed database 30 of 256BatchPIRServer: Processed database 31 of 256BatchPIRServer: Processed database 32 of 256BatchPIRServer: Processed database 33 of 256BatchPIRServer: Processed database 34 of 256BatchPIRServer: Processed database 35 of 256BatchPIRServer: Processed database 36 of 256BatchPIRServer: Processed database 37 of 256BatchPIRServer: Processed database 38 of 256BatchPIRServer: Processed database 39 of 256BatchPIRServer: Processed database 40 of 256BatchPIRServer: Processed database 41 of 256BatchPIRServer: Processed database 42 of 256BatchPIRServer: Processed database 43 of 256BatchPIRServer: Processed database 44 of 256BatchPIRServer: Processed database 45 of 256BatchPIRServer: Processed database 46 of 256BatchPIRServer: Processed database 47 of 256BatchPIRServer: Processed database 48 of 256BatchPIRServer: Processed database 49 of 256BatchPIRServer: Processed database 50 of 256BatchPIRServer: Processed database 51 of 256BatchPIRServer: Processed database 52 of 256BatchPIRServer: Processed database 53 of 256BatchPIRServer: Processed database 54 of 256BatchPIRServer: Processed database 55 of 256BatchPIRServer: Processed database 56 of 256BatchPIRServer: Processed database 57 of 256BatchPIRServer: Processed database 58 of 256BatchPIRServer: Processed database 59 of 256BatchPIRServer: Processed database 60 of 256BatchPIRServer: Processed database 61 of 256BatchPIRServer: Processed database 62 of 256BatchPIRServer: Processed database 63 of 256BatchPIRServer: Processed database 64 of 256BatchPIRServer: Processed database 65 of 256BatchPIRServer: Processed database 66 of 256BatchPIRServer: Processed database 67 of 256BatchPIRServer: Processed database 68 of 256BatchPIRServer: Processed database 69 of 256BatchPIRServer: Processed database 70 of 256BatchPIRServer: Processed database 71 of 256BatchPIRServer: Processed database 72 of 256BatchPIRServer: Processed database 73 of 256BatchPIRServer: Processed database 74 of 256BatchPIRServer: Processed database 75 of 256BatchPIRServer: Processed database 76 of 256BatchPIRServer: Processed database 77 of 256BatchPIRServer: Processed database 78 of 256BatchPIRServer: Processed database 79 of 256BatchPIRServer: Processed database 80 of 256BatchPIRServer: Processed database 81 of 256BatchPIRServer: Processed database 82 of 256BatchPIRServer: Processed database 83 of 256BatchPIRServer: Processed database 84 of 256BatchPIRServer: Processed database 85 of 256BatchPIRServer: Processed database 86 of 256BatchPIRServer: Processed database 87 of 256BatchPIRServer: Processed database 88 of 256BatchPIRServer: Processed database 89 of 256BatchPIRServer: Processed database 90 of 256BatchPIRServer: Processed database 91 of 256BatchPIRServer: Processed database 92 of 256BatchPIRServer: Processed database 93 of 256BatchPIRServer: Processed database 94 of 256BatchPIRServer: Processed database 95 of 256BatchPIRServer: Processed database 96 of 256BatchPIRServer: Processed database 97 of 256BatchPIRServer: Processed database 98 of 256BatchPIRServer: Processed database 99 of 256BatchPIRServer: Processed database 100 of 256BatchPIRServer: Processed database 101 of 256BatchPIRServer: Processed database 102 of 256BatchPIRServer: Processed database 103 of 256BatchPIRServer: Processed database 104 of 256BatchPIRServer: Processed database 105 of 256BatchPIRServer: Processed database 106 of 256BatchPIRServer: Processed database 107 of 256BatchPIRServer: Processed database 108 of 256BatchPIRServer: Processed database 109 of 256BatchPIRServer: Processed database 110 of 256BatchPIRServer: Processed database 111 of 256BatchPIRServer: Processed database 112 of 256BatchPIRServer: Processed database 113 of 256BatchPIRServer: Processed database 114 of 256BatchPIRServer: Processed database 115 of 256BatchPIRServer: Processed database 116 of 256BatchPIRServer: Processed database 117 of 256BatchPIRServer: Processed database 118 of 256BatchPIRServer: Processed database 119 of 256BatchPIRServer: Processed database 120 of 256BatchPIRServer: Processed database 121 of 256BatchPIRServer: Processed database 122 of 256BatchPIRServer: Processed database 123 of 256BatchPIRServer: Processed database 124 of 256BatchPIRServer: Processed database 125 of 256BatchPIRServer: Processed database 126 of 256BatchPIRServer: Processed database 127 of 256BatchPIRServer: Processed database 128 of 256BatchPIRServer: Processed database 129 of 256BatchPIRServer: Processed database 130 of 256BatchPIRServer: Processed database 131 of 256BatchPIRServer: Processed database 132 of 256BatchPIRServer: Processed database 133 of 256BatchPIRServer: Processed database 134 of 256BatchPIRServer: Processed database 135 of 256BatchPIRServer: Processed database 136 of 256BatchPIRServer: Processed database 137 of 256BatchPIRServer: Processed database 138 of 256BatchPIRServer: Processed database 139 of 256BatchPIRServer: Processed database 140 of 256BatchPIRServer: Processed database 141 of 256BatchPIRServer: Processed database 142 of 256BatchPIRServer: Processed database 143 of 256BatchPIRServer: Processed database 144 of 256BatchPIRServer: Processed database 145 of 256BatchPIRServer: Processed database 146 of 256BatchPIRServer: Processed database 147 of 256BatchPIRServer: Processed database 148 of 256BatchPIRServer: Processed database 149 of 256BatchPIRServer: Processed database 150 of 256BatchPIRServer: Processed database 151 of 256BatchPIRServer: Processed database 152 of 256BatchPIRServer: Processed database 153 of 256BatchPIRServer: Processed database 154 of 256BatchPIRServer: Processed database 155 of 256BatchPIRServer: Processed database 156 of 256BatchPIRServer: Processed database 157 of 256BatchPIRServer: Processed database 158 of 256BatchPIRServer: Processed database 159 of 256BatchPIRServer: Processed database 160 of 256BatchPIRServer: Processed database 161 of 256BatchPIRServer: Processed database 162 of 256BatchPIRServer: Processed database 163 of 256BatchPIRServer: Processed database 164 of 256BatchPIRServer: Processed database 165 of 256BatchPIRServer: Processed database 166 of 256BatchPIRServer: Processed database 167 of 256BatchPIRServer: Processed database 168 of 256BatchPIRServer: Processed database 169 of 256BatchPIRServer: Processed database 170 of 256BatchPIRServer: Processed database 171 of 256BatchPIRServer: Processed database 172 of 256BatchPIRServer: Processed database 173 of 256BatchPIRServer: Processed database 174 of 256BatchPIRServer: Processed database 175 of 256BatchPIRServer: Processed database 176 of 256BatchPIRServer: Processed database 177 of 256BatchPIRServer: Processed database 178 of 256BatchPIRServer: Processed database 179 of 256BatchPIRServer: Processed database 180 of 256BatchPIRServer: Processed database 181 of 256BatchPIRServer: Processed database 182 of 256BatchPIRServer: Processed database 183 of 256BatchPIRServer: Processed database 184 of 256BatchPIRServer: Processed database 185 of 256BatchPIRServer: Processed database 186 of 256BatchPIRServer: Processed database 187 of 256BatchPIRServer: Processed database 188 of 256BatchPIRServer: Processed database 189 of 256BatchPIRServer: Processed database 190 of 256BatchPIRServer: Processed database 191 of 256BatchPIRServer: Processed database 192 of 256BatchPIRServer: Processed database 193 of 256BatchPIRServer: Processed database 194 of 256BatchPIRServer: Processed database 195 of 256BatchPIRServer: Processed database 196 of 256BatchPIRServer: Processed database 197 of 256BatchPIRServer: Processed database 198 of 256BatchPIRServer: Processed database 199 of 256BatchPIRServer: Processed database 200 of 256BatchPIRServer: Processed database 201 of 256BatchPIRServer: Processed database 202 of 256BatchPIRServer: Processed database 203 of 256BatchPIRServer: Processed database 204 of 256BatchPIRServer: Processed database 205 of 256BatchPIRServer: Processed database 206 of 256BatchPIRServer: Processed database 207 of 256BatchPIRServer: Processed database 208 of 256BatchPIRServer: Processed database 209 of 256BatchPIRServer: Processed database 210 of 256BatchPIRServer: Processed database 211 of 256BatchPIRServer: Processed database 212 of 256BatchPIRServer: Processed database 213 of 256BatchPIRServer: Processed database 214 of 256BatchPIRServer: Processed database 215 of 256BatchPIRServer: Processed database 216 of 256BatchPIRServer: Processed database 217 of 256BatchPIRServer: Processed database 218 of 256BatchPIRServer: Processed database 219 of 256BatchPIRServer: Processed database 220 of 256BatchPIRServer: Processed database 221 of 256BatchPIRServer: Processed database 222 of 256BatchPIRServer: Processed database 223 of 256BatchPIRServer: Processed database 224 of 256BatchPIRServer: Processed database 225 of 256BatchPIRServer: Processed database 226 of 256BatchPIRServer: Processed database 227 of 256BatchPIRServer: Processed database 228 of 256BatchPIRServer: Processed database 229 of 256BatchPIRServer: Processed database 230 of 256BatchPIRServer: Processed database 231 of 256BatchPIRServer: Processed database 232 of 256BatchPIRServer: Processed database 233 of 256BatchPIRServer: Processed database 234 of 256BatchPIRServer: Processed database 235 of 256BatchPIRServer: Processed database 236 of 256BatchPIRServer: Processed database 237 of 256BatchPIRServer: Processed database 238 of 256BatchPIRServer: Processed database 239 of 256BatchPIRServer: Processed database 240 of 256BatchPIRServer: Processed database 241 of 256BatchPIRServer: Processed database 242 of 256BatchPIRServer: Processed database 243 of 256BatchPIRServer: Processed database 244 of 256BatchPIRServer: Processed database 245 of 256BatchPIRServer: Processed database 246 of 256BatchPIRServer: Processed database 247 of 256BatchPIRServer: Processed database 248 of 256BatchPIRServer: Processed database 249 of 256BatchPIRServer: Processed database 250 of 256BatchPIRServer: Processed database 251 of 256BatchPIRServer: Processed database 252 of 256BatchPIRServer: Processed database 253 of 256BatchPIRServer: Processed database 254 of 256BatchPIRServer: Processed database 255 of 256BatchPIRServer: Processed database 256 of 256
+BatchPIRServer: Database converted to PIR DB and merged successfully!
+BatchPIRServer: Database is NTT processed!
++---------------------------------------------------+
+|                 PIR PARAMETERS                    |
++---------------------------------------------------+
+|  num_entries_                  = 10528
+|  num_rounded_entries_          = 11264
+|  entry_size_                   = 32
+|  num_columns_per_entry_        = 13
+|  db_ptx_                       = 4576
+|  dimensions_                   = [ 32 32 11 ]
++---------------------------------------------------+
+BatchPIRServer: Converting and merging databases. This may take some time...
+BatchPIRServer: Processed database 1 of 52BatchPIRServer: Processed database 2 of 52BatchPIRServer: Processed database 3 of 52BatchPIRServer: Processed database 4 of 52BatchPIRServer: Processed database 5 of 52BatchPIRServer: Processed database 6 of 52BatchPIRServer: Processed database 7 of 52BatchPIRServer: Processed database 8 of 52BatchPIRServer: Processed database 9 of 52BatchPIRServer: Processed database 10 of 52BatchPIRServer: Processed database 11 of 52BatchPIRServer: Processed database 12 of 52BatchPIRServer: Processed database 13 of 52BatchPIRServer: Processed database 14 of 52BatchPIRServer: Processed database 15 of 52BatchPIRServer: Processed database 16 of 52BatchPIRServer: Processed database 17 of 52BatchPIRServer: Processed database 18 of 52BatchPIRServer: Processed database 19 of 52BatchPIRServer: Processed database 20 of 52BatchPIRServer: Processed database 21 of 52BatchPIRServer: Processed database 22 of 52BatchPIRServer: Processed database 23 of 52BatchPIRServer: Processed database 24 of 52BatchPIRServer: Processed database 25 of 52BatchPIRServer: Processed database 26 of 52BatchPIRServer: Processed database 27 of 52BatchPIRServer: Processed database 28 of 52BatchPIRServer: Processed database 29 of 52BatchPIRServer: Processed database 30 of 52BatchPIRServer: Processed database 31 of 52BatchPIRServer: Processed database 32 of 52BatchPIRServer: Processed database 33 of 52BatchPIRServer: Processed database 34 of 52BatchPIRServer: Processed database 35 of 52BatchPIRServer: Processed database 36 of 52BatchPIRServer: Processed database 37 of 52BatchPIRServer: Processed database 38 of 52BatchPIRServer: Processed database 39 of 52BatchPIRServer: Processed database 40 of 52BatchPIRServer: Processed database 41 of 52BatchPIRServer: Processed database 42 of 52BatchPIRServer: Processed database 43 of 52BatchPIRServer: Processed database 44 of 52BatchPIRServer: Processed database 45 of 52BatchPIRServer: Processed database 46 of 52BatchPIRServer: Processed database 47 of 52BatchPIRServer: Processed database 48 of 52BatchPIRServer: Processed database 49 of 52BatchPIRServer: Processed database 50 of 52BatchPIRServer: Processed database 51 of 52BatchPIRServer: Processed database 52 of 52
+BatchPIRServer: Database converted to PIR DB and merged successfully!
+BatchPIRServer: Database is NTT processed!
+BatchPIRServer: PIR servers preparation complete.
+Main: Starting query generation for example 3...
+Main: Query generation complete for example 3.
+Main: Starting response generation for example 3...
+Main: Response generation complete for example 3.
+Main: Checking decoded entries for example 3...
+Main: Noise budget left in the response: 1
+
+
+Main: All the entries matched for example 3!!
+
+***********************
+     Timings Report    
+***********************
+Input Parameters: Batch Size: 32, Number of Entries: 1048576, Entry Size: 32
+Initialization time: 10195 milliseconds
+Query generation time: 18 milliseconds
+Response generation time: 1395 milliseconds
+Total communication: 707 KB
+
+Input Parameters: Batch Size: 64, Number of Entries: 1048576, Entry Size: 32
+Initialization time: 14443 milliseconds
+Query generation time: 38 milliseconds
+Response generation time: 1387 milliseconds
+Total communication: 707 KB
+
+Input Parameters: Batch Size: 256, Number of Entries: 1048576, Entry Size: 32
+Initialization time: 24010 milliseconds
+Query generation time: 173 milliseconds
+Response generation time: 3262 milliseconds
+Total communication: 1285 KB
+
