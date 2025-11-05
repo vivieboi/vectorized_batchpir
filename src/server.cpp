@@ -79,6 +79,7 @@ void Server::populate_raw_db()
     };
 
     // Populate the rawdb_ vector with entries
+    #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < rounded_db_entries; ++i)
     {
         if (i < db_entries)
