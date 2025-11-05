@@ -92,7 +92,7 @@ Main: Query generation complete for example 2.
 Main: Starting response generation for example 2...
 Main: Response generation complete for example 2.
 Main: Checking decoded entries for example 2...
-Main: Noise budget left in the response: 3
+Main: Noise budget left in the response: 2
 
 Main: All the entries matched for example 2!!
 
@@ -164,20 +164,20 @@ Main: All the entries matched for example 3!!
      Timings Report    
 ***********************
 Input Parameters: Batch Size: 32, Number of Entries: 1048576, Entry Size: 32
-Initialization time: 17995 milliseconds
-Query generation time: 11 milliseconds
-Response generation time: 1375 milliseconds
+Initialization time: 11394 milliseconds
+Query generation time: 29 milliseconds
+Response generation time: 1458 milliseconds
 Total communication: 707 KB
 
 Input Parameters: Batch Size: 64, Number of Entries: 1048576, Entry Size: 32
-Initialization time: 29322 milliseconds
-Query generation time: 14 milliseconds
-Response generation time: 1822 milliseconds
+Initialization time: 17924 milliseconds
+Query generation time: 23 milliseconds
+Response generation time: 1383 milliseconds
 Total communication: 707 KB
 
 Input Parameters: Batch Size: 256, Number of Entries: 1048576, Entry Size: 32
-Initialization time: 49853 milliseconds
-Query generation time: 45 milliseconds
-Response generation time: 3233 milliseconds
+Initialization time: 37747 milliseconds
+Query generation time: 110 milliseconds
+Response generation time: 3390 milliseconds
 Total communication: 1285 KB
 
