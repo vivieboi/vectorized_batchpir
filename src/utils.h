@@ -55,6 +55,7 @@ namespace utils {
         rotation_Amount = rotation_Amount % row_size;
 
         std::vector<uint64_t> temp(vec.size(), 0ULL);
+        #pragma omp parallel for schedule(static)
         for (size_t i = 0; i < row_size; ++i) {
             temp[(i + rotation_Amount) % row_size] = vec[i];
             temp[(i + rotation_Amount) % row_size + row_size] = vec[i + row_size];
@@ -70,6 +71,7 @@ namespace utils {
         const size_t row_size = vec.size()/2;
         
         uint64_t tmp_slot = 0;
+        #pragma omp parallel for schedule(static)
         for (size_t i = 0; i < row_size; ++i) {
             tmp_slot = vec[i];
             vec[i] = vec[row_size + i];
