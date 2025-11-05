@@ -284,6 +284,7 @@ PirDB Server::convert_to_pir_db(int rawdb_index)
     // cout  <<  "total_rawdb_entries: " << total_rawdb_entries << endl;
 
     // Populate database
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < total_rawdb_entries; ++i)
     {
         // cout  <<  "total_rawdb_entries: " << i << endl;
@@ -323,6 +324,8 @@ void Server::transform_into_pir_db()
     {
         row.assign(polynomial_degree_, 0ULL);
     }
+
+    
 
     // Populate database
     for (int i = 0; i < total_rawdb_entries; ++i)
