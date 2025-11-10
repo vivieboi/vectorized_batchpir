@@ -24,6 +24,7 @@ public:
     uint32_t get_num_slots_per_entry();
     seal::EncryptionParameters get_seal_parameters() const;
     void set_max_bucket_size(size_t max_bucket_size);
+    void set_first_dimension_size(size_t max_bucket_size);
 
     void print_params() const;
 
@@ -39,7 +40,6 @@ private:
     uint64_t default_value_ = DatabaseConstants::DefaultVal;
     seal::EncryptionParameters seal_params_;
 
-    void set_first_dimension_size(size_t max_bucket_size);
 };
 
 #endif // BATCH_PIR_PARAMS_H

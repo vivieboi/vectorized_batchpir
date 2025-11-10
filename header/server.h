@@ -6,6 +6,7 @@
 #include <iostream>
 #include <chrono>
 #include "pirparams.h"
+#include "rawdb.h"
 
 using namespace seal;
 using namespace utils;
@@ -33,8 +34,9 @@ public:
 
     PIRResponseList generate_response(uint32_t client_id, PIRQuery query);
 
-    bool check_decoded_entry( std::vector<unsigned char> entry, int index);
-    bool check_decoded_entries(std::vector<std::vector<unsigned char>> entries, vector<uint64_t> indices);
+    bool check_decoded_entry( vector<unsigned char> entry, int index);
+    bool check_decoded_entries(vector<vector<unsigned char>> entries, vector<uint64_t> indices);
+    bool check_decoded_entries(RawDB entries, vector<uint64_t> indices);
 
     PIRResponseList merge_responses_chunks_buckets(vector<PIRResponseList>& responses, uint32_t client_id);
     PIRResponseList merge_responses_buckets_chunks(vector<PIRResponseList>& responses, uint32_t client_id);
@@ -63,10 +65,10 @@ private:
     
     
     RawDB rawdb_;
-    std::vector<RawDB> rawdb_list_;
+    vector<RawDB> rawdb_list_;
     PirDB  db_;
-    std::vector<PirDB>  db_list_;
-    std::vector<seal::Plaintext> encoded_db_;
+    vector<PirDB>  db_list_;
+    vector<seal::Plaintext> encoded_db_;
 
     
     RawDB populate_return_raw_db();
@@ -74,13 +76,16 @@ private:
     void round_db(RawDB& db);
 
     PirDB convert_to_pir_db(int rawdb_index);
+    PirDB convert_to_pir_db(int rawdb_index, const auto total_db_plaintexts, const auto total_rawdb_entries, const auto num_columns_per_entry, const auto plaintexts_per_chunk);
     void merge_pir_dbs();
 
-    std::vector<uint64_t> convert_to_list_of_coeff(std::vector<unsigned char> input_list);
+    vector<uint64_t> convert_to_list_of_coeff(vector<unsigned char> &input_list);
+    vector<uint64_t> convert_to_list_of_coeff(std::span<unsigned char> input_list);
+
     void rotate_db_cols();
     vector<seal::Ciphertext> rotate_copy_query(uint32_t client_id);
     void encode_db();
-    void merge_to_db(PirDB new_db, int rotation_index);
+    void merge_to_db(PirDB &new_db, int rotation_index);
 
     vector<Ciphertext> process_first_dimension(uint32_t client_id);
     vector<Ciphertext> old_process_first_dimension_delayed_mod(uint32_t client_id);

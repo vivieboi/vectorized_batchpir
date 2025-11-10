@@ -15,7 +15,7 @@ public:
     void set_client_keys(uint32_t client_id, std::pair<seal::GaloisKeys, seal::RelinKeys> keys);
     void get_client_keys();
     PIRResponseList generate_response(uint32_t client_id, vector<PIRQuery> queries);
-    bool check_decoded_entries(vector<std::vector<std::vector<unsigned char>>> entries_list, vector<uint64_t> cuckoo_table);
+    bool check_decoded_entries(vector<RawDB> entries_list, vector<uint64_t> cuckoo_table);
    
 
     
@@ -31,7 +31,7 @@ private:
 
 
     void simeple_hash();
-    std::vector<std::vector<uint64_t>>  simeple_hash_with_map();
+    vector<vector<uint64_t>>  simeple_hash_with_map();
     void prepare_pir_server();
     void populate_raw_db();
     std::size_t get_max_bucket_size() const;
