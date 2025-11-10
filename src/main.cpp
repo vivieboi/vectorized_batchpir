@@ -150,16 +150,35 @@ int batchpir_main(int argc, char* argv[])
 {
     const int client_id = 0;
     //  batch size, number of entries, size of entry
-    std::vector<std::array<size_t, 3>> input_choices;
-    input_choices.push_back({32, 1048576, 32});
-    input_choices.push_back({64, 1048576, 32});
-    input_choices.push_back({256, 1048576, 32});
+    vector<std::array<size_t, 3>> input_choices;
+    input_choices.push_back({16, 121272, 200});
+    // input_choices.push_back({5, 166943, 40});
+
+    // input_choices.push_back({16, 51564, 200});
+    // input_choices.push_back({2304, 116162, 80});
+    // 116162
+    // input_choices.push_back({24, 4817, 16});
+    // input_choices.push_back({24, 3064, 16});
+    // input_choices.push_back({24, 5055, 144});
+    // input_choices.push_back({100, 32662, 2});
+    // input_choices.push_back({84, 4256, 2});
+
     
 
-    std::vector<std::chrono::milliseconds> init_times;
-    std::vector<std::chrono::milliseconds> query_gen_times;
-    std::vector<std::chrono::milliseconds> resp_gen_times;
-    std::vector<size_t> communication_list;
+
+    // input_choices.push_back({256,10485,256});
+    // input_choices.push_back({256,10485,256});
+
+    // input_choices.push_back({364, 10000, 80});
+
+    // input_choices.push_back({64, 1048576, 32});
+    // input_choices.push_back({288, 513057, 80});
+    
+
+    vector<std::chrono::milliseconds> init_times;
+    vector<std::chrono::milliseconds> query_gen_times;
+    vector<std::chrono::milliseconds> resp_gen_times;
+    vector<size_t> communication_list;
 
  for (size_t iteration = 0; iteration < input_choices.size(); ++iteration)
 {
@@ -174,7 +193,7 @@ int batchpir_main(int argc, char* argv[])
     auto encryption_params = utils::create_encryption_parameters(selection);
     BatchPirParams params(choice[0], choice[1], choice[2], encryption_params);
     params.print_params();
-
+    // params.set_first_dimension_size(100000000);
     auto start = chrono::high_resolution_clock::now();
     BatchPIRServer batch_server(params);
     auto end = chrono::high_resolution_clock::now();

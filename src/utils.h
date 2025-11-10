@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+using namespace std;
+
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -9,15 +11,16 @@
 #include <vector>
 #include "database_constants.h"
 #include "seal/seal.h"
+#include "rawdb.h"
 
 
-typedef  std::vector<seal::Ciphertext> PIRQuery;
+typedef  vector<seal::Ciphertext> PIRQuery;
 typedef  seal::Ciphertext PIRResponse;
-typedef  std::vector<seal::Ciphertext> PIRResponseList;
-typedef  std::vector<std::vector<unsigned char>>  RawDB;
-typedef  std::vector<std::vector<unsigned char>>  RawResponses;
-typedef  std::vector<uint64_t> Row;
-typedef  std::vector<Row> PirDB;
+typedef  vector<seal::Ciphertext> PIRResponseList;
+// typedef  vector<vector<unsigned char>>  RawDB;
+typedef  RawDB  RawResponses;
+typedef  vector<uint64_t> Row;
+typedef  vector<Row> PirDB;
 using namespace std;
 using namespace seal;
 
@@ -46,7 +49,7 @@ namespace utils {
     }
 
 
-    inline std::vector<uint64_t> rotate_vector_row(std::vector<uint64_t>& vec, int rotation_Amount) {
+    inline vector<uint64_t> rotate_vector_row(vector<uint64_t>& vec, int rotation_Amount) {
         if (vec.empty()) {
             return {};
         }
@@ -54,7 +57,7 @@ namespace utils {
         const size_t row_size = vec.size()/2;
         rotation_Amount = rotation_Amount % row_size;
 
-        std::vector<uint64_t> temp(vec.size(), 0ULL);
+        vector<uint64_t> temp(vec.size(), 0ULL);
         for (size_t i = 0; i < row_size; ++i) {
             temp[(i + rotation_Amount) % row_size] = vec[i];
             temp[(i + rotation_Amount) % row_size + row_size] = vec[i + row_size];
@@ -62,7 +65,7 @@ namespace utils {
         return temp;
     }
 
-    inline std::vector<uint64_t> rotate_vector_col(std::vector<uint64_t>& vec) {
+    inline vector<uint64_t> rotate_vector_col(vector<uint64_t>& vec) {
         if (vec.empty()) {
             return {};
         }
@@ -76,16 +79,16 @@ namespace utils {
             vec[row_size + i] = tmp_slot;
         }
       
-    return vec;
+        return vec;
     }
-    
+
     inline std::size_t hash_mod(size_t id, size_t nonce, size_t data, size_t total_buckets){
         std::hash<std::string> hasher1;
         return hasher1(std::to_string(id) + std::to_string(nonce) + std::to_string(data)) % total_buckets;
     }
 
-    inline std::vector<size_t> get_candidate_buckets(size_t data, size_t num_candidates , size_t total_buckets){
-        std::vector<size_t> candidate_buckets;
+    inline vector<size_t> get_candidate_buckets(size_t data, size_t num_candidates , size_t total_buckets){
+        vector<size_t> candidate_buckets;
          
         for (int i = 0; i < num_candidates; i++){
             size_t nonce = 0;
@@ -115,12 +118,14 @@ namespace utils {
         vector<int> CoeffMods = {55, 55, 48, 60};
         seal_params.set_poly_modulus_degree(PolyDegree);
 
-        if(selection == "256,10485,256" ||  selection == "256,10485,32" ){
+
+
+        if(selection == "5, 166943, 40" || selection == "16,16098,200" || selection == "16,51564,200" || selection == "84,4256,2" || selection == "100,32662,2" || selection == "100,10970,2" || selection == "24,5055,144" || selection == "24,3064,16" || selection == "24,4817,16" || selection == "256,10485,256" ||  selection == "256,10485,32" || selection == "26,4817,16" ){
             // use these parameters when internal PIR is 2d and no merging is needed at the end
             PlaintextModBitss = 26;
             CoeffMods = {55, 55, 60};
 
-        }else if(selection == "32,1048576,32" || selection == "64,1048576,32" || selection == "256,104857,32"){
+        }else if(selection == "5, 166943, 200" || selection == "16, 121272, 20" || selection == "2304,116162,80" || selection == "32,1048576,32" || selection == "64,1048576,32" || selection == "256,104857,32" || selection == "16,121272,200"){
             // use these parameters when internal PIR is 3d but no merging is needed at the end
             PlaintextModBitss = 28;
             CoeffMods = {42, 58, 58, 60};

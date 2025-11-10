@@ -1,5 +1,22 @@
 #include "server.h"
+// #include<bits/stdc++.h>
+#include <omp.h>
+#include <chrono>
 
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <cmath>
+#include <unordered_map>
+#include <map>
+#include <set>
+#include <queue>
+
+
+#define threads 16
+
+using namespace chrono;
 // Constructor
 Server::Server(PirParams &pir_params) : pir_params_(pir_params)
 {
@@ -61,21 +78,19 @@ void Server::populate_raw_db()
     rawdb_.resize(rounded_db_entries);
 
     // Define a function to generate a random entry
-    auto generate_random_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_random_entry = [entry_size](span<unsigned char> rawdb_row) -> void
     {
-        std::vector<unsigned char> entry(entry_size);
-        std::generate(entry.begin(), entry.end(), []()
-                      {
-                          return rand() % 0xFF;
-                          // return 1;
-                      });
-        return entry;
+        for (int i = 0; i < entry_size; i++) {
+            rawdb_row[i] = rand() % 0xFF;
+        }
     };
 
     // Define a function to generate a zero-filled entry
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size](span<unsigned char> rawdb_row) -> void
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        for (int i = 0; i < entry_size; i++) {
+            rawdb_row[i] = 1;
+        }
     };
 
     // Populate the rawdb_ vector with entries
@@ -83,11 +98,11 @@ void Server::populate_raw_db()
     {
         if (i < db_entries)
         {
-            rawdb_[i] = generate_random_entry();
+            generate_random_entry(rawdb_[i]);
         }
         else
         {
-            rawdb_[i] = generate_one_entry();
+            generate_one_entry(rawdb_[i]);
         }
     }
 }
@@ -95,6 +110,7 @@ void Server::populate_raw_db()
 ///   data functions to be used with bathcpir server
 void Server::round_dbs()
 {
+    
     for (int i = 0; i < rawdb_list_.size(); i++)
     {
         round_db(rawdb_list_[i]);
@@ -108,14 +124,18 @@ void Server::round_db(RawDB &db)
     auto entry_size = pir_params_.get_entry_size();
 
     // Define a function to generate a zero-filled entry
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size](span<unsigned char> rawdb_row) -> void
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        for (int i = 0; i < entry_size; i++) {
+            rawdb_row[i] = 1;
+        }
     };
 
-    for (int i = 0; i < (rounded_db_entries - db_entries); i++)
+    db.resize(rounded_db_entries);
+
+    for (int i = db_entries; i < rounded_db_entries; i++)
     {
-        db.push_back(generate_one_entry());
+        generate_one_entry(db[i]);      // TODO: double-check this logic
     }
 }
 
@@ -137,34 +157,34 @@ RawDB Server::populate_return_raw_db()
     auto rounded_db_entries = pir_params_.get_rounded_num_entries();
     auto entry_size = pir_params_.get_entry_size();
 
-    // Resize the rawdb vector to the correct size
-    RawDB rawdb(rounded_db_entries);
-
     // Define a function to generate a random entry
-    auto generate_random_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_random_entry = [entry_size](span<unsigned char> row) -> void
     {
-        std::vector<unsigned char> entry(entry_size);
-        std::generate(entry.begin(), entry.end(), []()
-                      { return rand() % 0xFF; });
-        return entry;
+        for (int i = 0; i < entry_size; i++) {
+            row[i] = rand() % 0xFF;
+        }
     };
 
     // Define a function to generate a zero-filled entry
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size](span<unsigned char> row) -> void
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        for (int i = 0; i < entry_size; i++) {
+            row[i] = 1;
+        }
     };
+
+    RawDB rawdb = RawDB(rounded_db_entries, entry_size);
 
     // Populate the rawdb vector with entries
     for (size_t i = 0; i < rounded_db_entries; ++i)
     {
         if (i < db_entries)
         {
-            rawdb[i] = generate_random_entry();
+            generate_random_entry(rawdb[i]);
         }
         else
         {
-            rawdb[i] = generate_one_entry();
+            generate_one_entry(rawdb[i]);
         }
     }
 
@@ -199,7 +219,7 @@ void Server::merge_pir_dbs()
     }
 }
 
-void Server::merge_to_db(PirDB new_db, int rotation_index)
+void Server::merge_to_db(PirDB &new_db, int rotation_index)
 {
     const auto total_db_plaintexts = pir_params_.get_db_rows();
 
@@ -208,6 +228,7 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
     if (rotate_amount == 0)
     {
         db_.resize(total_db_plaintexts);
+        #pragma omp parallel for num_threads(threads) schedule(static)
         for (auto &row : db_)
         {
             row.assign(polynomial_degree_, 0ULL);
@@ -219,6 +240,7 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
         rotate_amount = rotate_amount - gap_;
     }
 
+    #pragma omp parallel for num_threads(threads) schedule(static)
     for (int j = 0; j < total_db_plaintexts; j++)
     {
 
@@ -235,6 +257,8 @@ void Server::merge_to_db(PirDB new_db, int rotation_index)
     }
 }
 
+
+
 void Server::convert_merge_pir_dbs()
 {
     db_list_.clear();
@@ -246,9 +270,12 @@ void Server::convert_merge_pir_dbs()
     // Convert and merge each raw database into uint_64 PIR elements
     for (int i = 0; i < num_databases_; i++)
     {
+        // auto start = chrono::high_resolution_clock::now();
+
         auto db = convert_to_pir_db(i);
+
         merge_to_db(db, i);
-        std::cout << "BatchPIRServer: Processed database " << i + 1 << " of " << num_databases_ << "\r" << std::flush;
+     
     }
 
     cout << endl;
@@ -273,17 +300,22 @@ PirDB Server::convert_to_pir_db(int rawdb_index)
     // Initialize database
 
     PirDB db(total_db_plaintexts);
+    #pragma omp parallel for num_threads(threads) schedule(static)
     for (auto &row : db)
     {
         row.assign(polynomial_degree_, 0ULL);
     }
-    // cout  <<  "total_rawdb_entries: " << total_rawdb_entries << endl;
-
+  
     // Populate database
+    #pragma omp parallel for num_threads(threads) schedule(static)
     for (int i = 0; i < total_rawdb_entries; ++i)
-    {
-        // cout  <<  "total_rawdb_entries: " << i << endl;
+    {   
+        // auto start = chrono::high_resolution_clock::now();
         auto coeffs = convert_to_list_of_coeff(rawdb_list_[rawdb_index][i]);
+
+        // auto end = chrono::high_resolution_clock::now();
+        // auto duration_init = chrono::duration_cast<chrono::nanoseconds>(end - start);
+        // cout  <<  "total_rawdb_entries: " << i << endl;
 
         int plaintext_idx = i / pir_dimensions_[0];
         const int slot = (i * gap_) % row_size_;
@@ -300,6 +332,9 @@ PirDB Server::convert_to_pir_db(int rawdb_index)
             db[plaintext_idx][slot] = coeffs[j];
             plaintext_idx += plaintexts_per_chunk;
         }
+        // auto end1 = chrono::high_resolution_clock::now();
+        // auto duration_total = chrono::duration_cast<chrono::nanoseconds>(end1 - start);
+        // cout<<"Durations are "<<duration_init.count()<<" "<<duration_total.count()<<"\n";
     }
 
     return db;
@@ -363,8 +398,12 @@ PIRResponseList Server::merge_responses_chunks_buckets(vector<PIRResponseList> &
     const size_t max_empty_slots = pir_params_.get_dimensions()[0];
     auto num_chunk_ctx = ceil(num_slots_per_entry * 1.0 / max_empty_slots);
 
-    PIRResponseList chunk_response;
+    int N = responses.size() *  num_chunk_ctx;
+    // PIRResponseList chunk_response;
+    PIRResponseList chunk_response(N);
+    int iter=0;
 
+    #pragma omp parallel for num_threads(threads) schedule(static)
     for (int i = 0; i < responses.size(); i++)
     {
         auto remaining_slots_entry = num_slots_per_entry;
@@ -384,7 +423,9 @@ PIRResponseList Server::merge_responses_chunks_buckets(vector<PIRResponseList> &
                 evaluator_->add_inplace(chunk_ct_acc, responses[i][chunk_idx + k]);
             }
             remaining_slots_entry -= loop;
-            chunk_response.push_back(chunk_ct_acc);
+            chunk_response[iter] = chunk_ct_acc;
+            iter++;
+            // chunk_response.push_back(chunk_ct_acc);
         }
     }
 
@@ -421,7 +462,7 @@ PIRResponseList Server::merge_responses_chunks_buckets(vector<PIRResponseList> &
             }
 
             // selection logic: select consecutive gap_  entries from each bucket
-            std::vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
+            vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
             std::fill_n(selection_vector.begin() + (j * current_fill), current_fill, 1ULL);
             std::fill_n(selection_vector.begin() + row_size_ + (j * current_fill), current_fill, 1ULL);
 
@@ -483,7 +524,7 @@ PIRResponseList Server::merge_responses_buckets_chunks(vector<PIRResponseList> &
             }
 
             // selection logic: select consecutive gap_  entries from each bucket
-            std::vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
+            vector<uint64_t> selection_vector(polynomial_degree_, 0ULL);
             std::fill_n(selection_vector.begin() + (i * gap_), gap_, 1ULL);
             std::fill_n(selection_vector.begin() + row_size_ + (i * gap_), gap_, 1ULL);
 
@@ -565,8 +606,9 @@ void Server::print_rawdb()
 {
     std::cout << "BatchPIRServer: Size of raw db " << rawdb_.size() << std::endl;
     int idx = 0;
-    for (const auto &row : rawdb_)
+    for (int i = 0; i < rawdb_.size(); i++)
     {
+        span<unsigned char> row = rawdb_[i];
         std::cout << idx << " [";
         for (auto it = row.begin(); it != row.end(); it++)
         {
@@ -583,7 +625,7 @@ void Server::print_encoded_db()
 {
     for (const auto &row : encoded_db_)
     {
-        std::vector<uint64_t> decoded_plain;
+        vector<uint64_t> decoded_plain;
         batch_encoder_->decode(row, decoded_plain);
 
         for (const auto &entry : decoded_plain)
@@ -617,6 +659,7 @@ void Server::encode_db()
     // Resize encoded database to match size of database
     encoded_db_.resize(db_.size());
 
+    #pragma omp parallel for num_threads(threads) schedule(static)
     // Encode each element of the database
     for (int i = 0; i < db_.size(); i++)
     {
@@ -627,7 +670,7 @@ void Server::encode_db()
         catch (const std::exception &e)
         {
             std::cerr << "Error encoding data: " << e.what() << std::endl;
-            return;
+            // return;
         }
     }
 }
@@ -642,6 +685,7 @@ void Server::ntt_preprocess_db()
     if (is_db_preprocessed_)
         return;
     auto pid = context_->first_parms_id();
+    #pragma omp parallel for num_threads(threads) schedule(static)
     for (int i = 0; i < encoded_db_.size(); i++)
     {
         evaluator_->transform_to_ntt_inplace(encoded_db_[i], pid);
@@ -651,17 +695,18 @@ void Server::ntt_preprocess_db()
     std::cout << "BatchPIRServer: Database is NTT processed!" << std::endl;
 }
 
-std::vector<uint64_t> Server::convert_to_list_of_coeff(std::vector<unsigned char> input_list)
+vector<uint64_t> Server::convert_to_list_of_coeff(vector<unsigned char> &input_list)
 {
     auto size_of_input = input_list.size();
     const int size_of_coeff = plaint_bit_count_ - 1;
     const int remain = (size_of_input * 8) % size_of_coeff;
     const int cols = pir_params_.get_num_slots_per_entry();
-    std::vector<uint64_t> output_list(cols);
+    vector<uint64_t> output_list(cols);
     std::string bit_str;
 
+       
     for (int i = 0; i < size_of_input; i++)
-    {
+    {   
         bit_str += std::bitset<8>(input_list[i]).to_string();
     }
 
@@ -681,8 +726,83 @@ std::vector<uint64_t> Server::convert_to_list_of_coeff(std::vector<unsigned char
 
         output_list[i] = value;
     }
+
     return output_list;
 }
+
+vector<uint64_t> Server::convert_to_list_of_coeff(std::span<unsigned char> input_list)
+{
+    auto size_of_input = input_list.size();
+    const int size_of_coeff = plaint_bit_count_ - 1;
+    const int remain = (size_of_input * 8) % size_of_coeff;
+    const int cols = pir_params_.get_num_slots_per_entry();
+    vector<uint64_t> output_list(cols);
+    std::string bit_str;
+
+    for (int i = 0; i < size_of_input; i++)
+    {
+        bit_str += std::bitset<8>(input_list[i]).to_string();
+    }
+
+    if (remain != 0)
+    {
+        for (int i = 0; i < (size_of_coeff - remain); i++)
+            bit_str += "1";
+    }
+
+    #pragma omp parallel for schedule(static)
+    for (int i = 0; i < cols; i++)
+    {
+        uint64_t value = 0;
+        for (char bit : bit_str.substr(i * size_of_coeff, size_of_coeff)) {
+            value <<= 1;
+            value |= (bit == '1') ? 1 : 0;
+        }
+
+        output_list[i] = value;
+    }
+    return output_list;
+}
+
+// vector<uint64_t> Server::convert_to_list_of_coeff(vector<unsigned char> &input_list)
+// {
+//     const size_t size_of_input = input_list.size();
+//     const int size_of_coeff = plaint_bit_count_ - 1;
+//     const int cols = pir_params_.get_num_slots_per_entry();
+
+//     vector<uint64_t> output_list(cols, 0);
+
+//     size_t total_bits = size_of_input * 8;
+//     size_t total_bits_padded = ((total_bits + size_of_coeff - 1) / size_of_coeff) * size_of_coeff;
+
+//     size_t bit_index = 0;
+//     size_t byte_index = 0;
+//     unsigned char current_byte = input_list.empty() ? 0 : input_list[0];
+
+//     for (int col = 0; col < cols; ++col)
+//     {
+//         uint64_t value = 0;
+//         for (int bit = 0; bit < size_of_coeff; ++bit)
+//         {
+//             value <<= 1;
+//             if (bit_index < total_bits)
+//             {
+//                 // read bit from input_list
+//                 int bit_pos = 7 - (bit_index % 8);
+//                 if (input_list[bit_index / 8] & (1 << bit_pos))
+//                     value |= 1ULL;
+//             }
+//             else {
+//                 // padding bits (add 1s)
+//                 value |= 1ULL;
+//             }
+//             ++bit_index;
+//         }
+//         output_list[col] = value;
+//     }
+
+//     return output_list;
+// }
 
 bool Server::print_raw_database_status()
 {
@@ -739,10 +859,65 @@ vector<Ciphertext> Server::process_first_dimension(uint32_t client_id)
     return first_intermediate_data;
 }
 
+// vector<Ciphertext> Server::process_first_dimension_delayed_mod(uint32_t client_id)
+// {
+//     auto rotated_query = rotate_copy_query(client_id);
+//     vector<Ciphertext> first_intermediate_data;
+
+//     auto context_data_ptr = context_->get_context_data(rotated_query[0].parms_id());
+//     auto &context_data = *context_data_ptr;
+//     auto &parms = context_data.parms();
+//     auto &coeff_modulus = parms.coeff_modulus();
+//     size_t coeff_count = parms.poly_modulus_degree();
+//     size_t coeff_mod_count = coeff_modulus.size();
+//     size_t encrypted_ntt_size = rotated_query[0].size();
+//     vector<vector<uint128_t>> buffer(encrypted_ntt_size, vector<uint128_t>(coeff_count * coeff_mod_count, 0));
+
+//     Ciphertext ct_acc;
+
+//     for (int col_id = 0; col_id < encoded_db_.size(); col_id += pir_dimensions_[1])
+//     {
+
+//         vector<vector<uint128_t>> buffer(encrypted_ntt_size, vector<uint128_t>(coeff_count * coeff_mod_count, 1));
+//         for (int i = 0; i < pir_dimensions_[1]; i++)
+//         {
+//             for (size_t poly_id = 0; poly_id < encrypted_ntt_size; poly_id++)
+//             {
+//                 utils::multiply_poly_acum(rotated_query[i].data(poly_id), encoded_db_[col_id + i].data(), coeff_count * coeff_mod_count, buffer[poly_id].data());
+//             }
+//         }
+
+//         ct_acc = rotated_query[0];
+//         for (size_t poly_id = 0; poly_id < encrypted_ntt_size; poly_id++)
+//         {
+//             auto ct_ptr = ct_acc.data(poly_id);
+//             auto pt_ptr = buffer[poly_id];
+//             for (int mod_id = 0; mod_id < coeff_mod_count; mod_id++)
+//             {
+//                 auto mod_idx = (mod_id * coeff_count);
+
+//                 for (int coeff_id = 0; coeff_id < coeff_count; coeff_id++)
+//                 {
+//                     pt_ptr[coeff_id + mod_idx] = pt_ptr[coeff_id + mod_idx] % static_cast<__uint128_t>(coeff_modulus[mod_id].value());
+//                     ct_ptr[coeff_id + mod_idx] = static_cast<uint64_t>(pt_ptr[coeff_id + mod_idx]);
+//                 }
+//             }
+//         }
+
+//         evaluator_->transform_from_ntt_inplace(ct_acc);
+//         //evaluator_->mod_switch_to_next_inplace(ct_acc);
+//         first_intermediate_data.push_back(ct_acc);
+//     }
+//     return first_intermediate_data;
+// }
+
 vector<Ciphertext> Server::process_first_dimension_delayed_mod(uint32_t client_id)
 {
+
+    auto start = chrono::high_resolution_clock::now();
+   
     auto rotated_query = rotate_copy_query(client_id);
-    vector<Ciphertext> first_intermediate_data;
+    // vector<Ciphertext> first_intermediate_data;
 
     auto context_data_ptr = context_->get_context_data(rotated_query[0].parms_id());
     auto &context_data = *context_data_ptr;
@@ -751,14 +926,21 @@ vector<Ciphertext> Server::process_first_dimension_delayed_mod(uint32_t client_i
     size_t coeff_count = parms.poly_modulus_degree();
     size_t coeff_mod_count = coeff_modulus.size();
     size_t encrypted_ntt_size = rotated_query[0].size();
-    std::vector<std::vector<uint128_t>> buffer(encrypted_ntt_size, std::vector<uint128_t>(coeff_count * coeff_mod_count, 0));
+    vector<vector<uint128_t>> buffer(encrypted_ntt_size, vector<uint128_t>(coeff_count * coeff_mod_count, 0));
 
-    Ciphertext ct_acc;
+    int N = floor(encoded_db_.size()/pir_dimensions_[1]);
+    // cout<<"Printing encoded db size "<<encoded_db_.size()<<"\n";
+    vector<Ciphertext> first_intermediate_data(N);
 
-    for (int col_id = 0; col_id < encoded_db_.size(); col_id += pir_dimensions_[1])
+    cout<<N<<"\n";
+    #pragma omp parallel for num_threads(threads) schedule(static)
+    // for (int col_id = 0; col_id < encoded_db_.size(); col_id += pir_dimensions_[1])
+    for (int iter = 0; iter < N; iter++)
     {
+        Ciphertext ct_acc;
 
-        std::vector<std::vector<uint128_t>> buffer(encrypted_ntt_size, std::vector<uint128_t>(coeff_count * coeff_mod_count, 1));
+        int col_id = iter*pir_dimensions_[1];
+        vector<vector<uint128_t>> buffer(encrypted_ntt_size, vector<uint128_t>(coeff_count * coeff_mod_count, 1));
         for (int i = 0; i < pir_dimensions_[1]; i++)
         {
             for (size_t poly_id = 0; poly_id < encrypted_ntt_size; poly_id++)
@@ -786,8 +968,14 @@ vector<Ciphertext> Server::process_first_dimension_delayed_mod(uint32_t client_i
 
         evaluator_->transform_from_ntt_inplace(ct_acc);
         //evaluator_->mod_switch_to_next_inplace(ct_acc);
-        first_intermediate_data.push_back(ct_acc);
+        // first_intermediate_data.push_back(ct_acc);
+        first_intermediate_data[iter] = ct_acc;
     }
+
+    auto end = chrono::high_resolution_clock::now();
+    auto duration_first = chrono::duration_cast<chrono::milliseconds>(end - start);
+
+    cout<<"Duration first dimension "<<duration_first.count()<<"\n";
     return first_intermediate_data;
 }
 
@@ -835,17 +1023,78 @@ vector<Ciphertext> Server::old_process_first_dimension_delayed_mod(uint32_t clie
     return first_intermediate_data;
 }
 
+// vector<Ciphertext> Server::process_second_dimension(uint32_t client_id, vector<Ciphertext> first_intermediate_data)
+// {
+
+//     vector<Ciphertext> second_intermediate_data;
+
+//     Ciphertext ct_acc;
+//     Ciphertext ct1, ct2;
+    
+//     for (int idx = 0; idx < first_intermediate_data.size(); idx += pir_dimensions_[2])
+//     {
+
+//         evaluator_->multiply(query_[1], first_intermediate_data[idx], ct_acc);
+//         evaluator_->mod_switch_to_next_inplace(ct_acc);
+//         evaluator_->relinearize_inplace(ct_acc, client_keys_[client_id].second);
+
+//         for (int i = 1; i < pir_dimensions_[2]; i += 1)
+//         {
+
+//             evaluator_->multiply(query_[1], first_intermediate_data[idx + i], ct1);
+//             evaluator_->mod_switch_to_next_inplace(ct1);
+//             evaluator_->relinearize_inplace(ct1, client_keys_[client_id].second);
+//             evaluator_->rotate_rows_inplace(ct1, -1 * i * gap_, client_keys_[client_id].first);
+//             evaluator_->add_inplace(ct_acc, ct1);
+//         }
+
+        
+//         second_intermediate_data.push_back(ct_acc);
+//     }
+
+//     if (second_intermediate_data.size() != pir_params_.get_num_slots_per_entry())
+//     {
+//         // Throw an exception
+//         throw runtime_error("Error: Size of second_intermediate_data is not equal to pir_params_.get_num_slots_per_entry()");
+//     }
+
+//     return second_intermediate_data;
+// }
+
+// PIRResponseList Server::process_last_dimension(uint32_t client_id, vector<Ciphertext> second_intermediate_data, bool is_2d_pir_)
+// {
+//     PIRResponseList ct_acc;
+//     if(!is_2d_pir_){
+//         evaluator_->mod_switch_to_next_inplace(query_.back());
+//     }
+//     for (int idx = 0; idx < second_intermediate_data.size(); idx++)
+//     {
+//         Ciphertext ct;
+//         evaluator_->multiply(query_.back(), second_intermediate_data[idx], ct);
+
+//         evaluator_->relinearize_inplace(ct, client_keys_[client_id].second);
+
+//         ct_acc.push_back(ct);
+//     }
+//     return ct_acc;
+// }
+
+
 vector<Ciphertext> Server::process_second_dimension(uint32_t client_id, vector<Ciphertext> first_intermediate_data)
 {
 
-    vector<Ciphertext> second_intermediate_data;
+    auto start = chrono::high_resolution_clock::now();
 
-    Ciphertext ct_acc;
-    Ciphertext ct1, ct2;
+    int N = floor(first_intermediate_data.size() / pir_dimensions_[2]);
+    vector<Ciphertext> second_intermediate_data(N);
     
-    for (int idx = 0; idx < first_intermediate_data.size(); idx += pir_dimensions_[2])
+    // for (int idx = 0; idx < first_intermediate_data.size(); idx += pir_dimensions_[2])
+    #pragma omp parallel for num_threads(threads) schedule(static)
+    for (int iter = 0; iter < N; iter++)
     {
-
+        Ciphertext ct_acc;
+        Ciphertext ct1, ct2;
+        int idx = iter * pir_dimensions_[2];
         evaluator_->multiply(query_[1], first_intermediate_data[idx], ct_acc);
         evaluator_->mod_switch_to_next_inplace(ct_acc);
         evaluator_->relinearize_inplace(ct_acc, client_keys_[client_id].second);
@@ -860,8 +1109,8 @@ vector<Ciphertext> Server::process_second_dimension(uint32_t client_id, vector<C
             evaluator_->add_inplace(ct_acc, ct1);
         }
 
-        
-        second_intermediate_data.push_back(ct_acc);
+        second_intermediate_data[iter] = ct_acc;
+        // second_intermediate_data.push_back(ct_acc);
     }
 
     if (second_intermediate_data.size() != pir_params_.get_num_slots_per_entry())
@@ -870,24 +1119,36 @@ vector<Ciphertext> Server::process_second_dimension(uint32_t client_id, vector<C
         throw runtime_error("Error: Size of second_intermediate_data is not equal to pir_params_.get_num_slots_per_entry()");
     }
 
+    auto end = chrono::high_resolution_clock::now();
+    auto duration_second = chrono::duration_cast<chrono::milliseconds>(end - start);
+
+    cout<<"Duration second dimension "<<duration_second.count()<<"\n";
+
     return second_intermediate_data;
 }
 
 PIRResponseList Server::process_last_dimension(uint32_t client_id, vector<Ciphertext> second_intermediate_data, bool is_2d_pir_)
-{
-    PIRResponseList ct_acc;
+{   
+    auto start = chrono::high_resolution_clock::now();
+    PIRResponseList ct_acc(second_intermediate_data.size());
     if(!is_2d_pir_){
         evaluator_->mod_switch_to_next_inplace(query_.back());
     }
+
+    #pragma omp parallel for num_threads(threads) schedule(static)
     for (int idx = 0; idx < second_intermediate_data.size(); idx++)
     {
         Ciphertext ct;
         evaluator_->multiply(query_.back(), second_intermediate_data[idx], ct);
 
         evaluator_->relinearize_inplace(ct, client_keys_[client_id].second);
-
-        ct_acc.push_back(ct);
+        ct_acc[idx] = ct;
+        // ct_acc.push_back(ct);
     }
+    auto end = chrono::high_resolution_clock::now();
+    auto duration_last = chrono::duration_cast<chrono::milliseconds>(end - start);
+
+    cout<<"Duration last dimension "<<duration_last.count()<<"\n";
     return ct_acc;
 }
 
@@ -907,37 +1168,18 @@ PIRResponseList Server::generate_response(uint32_t client_id, PIRQuery query)
 
     query_ = query;
 
-    // Time process_first_dimension function
-    // auto start = chrono::high_resolution_clock::now();
-    // vector<Ciphertext> first_intermediate_data = process_first_dimension(client_id);
     vector<Ciphertext> first_intermediate_data = process_first_dimension_delayed_mod(client_id);
-    // auto end = chrono::high_resolution_clock::now();
-    // auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    // cout << "Server: process_first_dimension time: " << duration.count() << " milliseconds" << endl;
-
-    // Time process_second_dimension function
-    // start = chrono::high_resolution_clock::now();
     vector<Ciphertext> second_intermediate_data;
     if(pir_dimensions_.size() == 3){
         second_intermediate_data = process_second_dimension(client_id, first_intermediate_data);
     }else{
         second_intermediate_data = first_intermediate_data;
     }
-    // end = chrono::high_resolution_clock::now();
-    // duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    // cout << "Server: process_second_dimension time: " << duration.count() << " milliseconds" << endl;
-
-    // Time process_third_dimension function
-    // start = chrono::high_resolution_clock::now();
     PIRResponseList response = process_last_dimension(client_id, second_intermediate_data, pir_dimensions_.size() == 2);
-    // end = chrono::high_resolution_clock::now();
-    // duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    // cout << "Server: process_third_dimension time: " << duration.count() << " milliseconds" << endl;
-
     return response;
 }
 
-bool Server::check_decoded_entry(std::vector<unsigned char> entry, int index)
+bool Server::check_decoded_entry(vector<unsigned char> entry, int index)
 {
     if (entry.size() != rawdb_list_[1][index].size())
     {
@@ -970,7 +1212,31 @@ bool Server::check_decoded_entry(std::vector<unsigned char> entry, int index)
     return result;
 }
 
-bool Server::check_decoded_entries(std::vector<std::vector<unsigned char>> entries, vector<uint64_t> indices)
+bool Server::check_decoded_entries(vector<vector<unsigned char>> entries, vector<uint64_t> indices)
+{
+    for (int i = 0; i < num_databases_; i++)
+    {
+
+        // dont check anything if its a default inddex, only used for cuckoo hashing
+        if (indices[i] != pir_params_.get_default_value())
+        {
+            if (entries[i].size() != rawdb_list_[i][indices[i]].size())
+            {
+                throw std::runtime_error("Error: Vectors have different sizes!");
+            }
+           
+            bool result = std::equal(entries[i].begin(), entries[i].end(), rawdb_list_[i][indices[i]].begin());
+            if (!result)
+            {
+                throw std::runtime_error("Error: Entries do not match!");
+            }
+        }
+    }
+    cout << endl;
+    return true;
+}
+
+bool Server::check_decoded_entries(RawDB entries, vector<uint64_t> indices)
 {
     for (int i = 0; i < num_databases_; i++)
     {

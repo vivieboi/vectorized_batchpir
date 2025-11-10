@@ -64,7 +64,12 @@ void BatchPirParams::set_first_dimension_size(size_t max_bucket_size){
     auto dim_size = dim_size_;
     auto prev_dim_size = dim_size;
     auto batch_size = ceil((batch_size_*cuckoo_factor_)*1.0/2);
-    while(batch_size * dim_size <= seal_params_.poly_modulus_degree()/2){
+    // while(batch_size * dim_size <= seal_params_.poly_modulus_degree()/2){
+    //     prev_dim_size = dim_size;
+    //     dim_size = utils::next_power_of_two(dim_size + 1);
+        
+    // }
+    while(batch_size * dim_size <= seal_params_.poly_modulus_degree()/16){
         prev_dim_size = dim_size;
         dim_size = utils::next_power_of_two(dim_size + 1);
         

@@ -139,6 +139,7 @@ void PirParams::calculate_dimensions(size_t num_entries)
 
 void PirParams::calculate_dimensions(size_t num_entries, size_t first_two_dimensions)
 {
+
     if (first_two_dimensions > seal_params_.poly_modulus_degree() / 2)
     {
         throw std::invalid_argument("First two dimensions exceed row size");

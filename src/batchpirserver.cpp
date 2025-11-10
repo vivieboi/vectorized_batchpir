@@ -24,26 +24,22 @@ void BatchPIRServer::populate_raw_db()
 {
     auto db_entries = batchpir_params_->get_num_entries();
     auto entry_size = batchpir_params_->get_entry_size();
-
-    // Resize the rawdb vector to the correct size
-    rawdb_.resize(db_entries);
+    
 
     // Define a function to generate a random entry
-    auto generate_random_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_random_entry = [entry_size](span<unsigned char> row) -> void
     {
-        std::vector<unsigned char> entry(entry_size);
-        std::generate(entry.begin(), entry.end(), []()
-                      {
-                          return rand() % 0xFF;
-                          // return 1;
-                      });
-        return entry;
+        for (int i = 0; i < entry_size; i++) {
+            row[i] = rand() % 0xFF;
+        }
     };
+
+    rawdb_ = RawDB(db_entries, entry_size);
 
     // Populate the rawdb vector with entries
     for (size_t i = 0; i < db_entries; ++i)
     {
-        rawdb_[i] = generate_random_entry();
+        generate_random_entry(rawdb_[i]);
     }
 }
 
@@ -96,7 +92,7 @@ void BatchPIRServer::simeple_hash()
 
     for (uint64_t i = 0; i < db_entries; i++)
     {
-        std::vector<size_t> candidates = utils::get_candidate_buckets(i, num_candidates, total_buckets);
+        vector<size_t> candidates = utils::get_candidate_buckets(i, num_candidates, total_buckets);
         for (auto b : candidates)
         {
             buckets_[b].push_back(rawdb_[i]);
@@ -110,18 +106,18 @@ void BatchPIRServer::simeple_hash()
     balance_buckets();
 }
 
-std::vector<std::vector<uint64_t>> BatchPIRServer::simeple_hash_with_map()
+vector<vector<uint64_t>> BatchPIRServer::simeple_hash_with_map()
 {
     auto total_buckets = ceil(batchpir_params_->get_cuckoo_factor() * batchpir_params_->get_batch_size());
     auto db_entries = batchpir_params_->get_num_entries();
     auto num_candidates = batchpir_params_->get_num_hash_funcs();
     buckets_.resize(total_buckets);
 
-    std::vector<std::vector<uint64_t>> map(total_buckets);
+    vector<vector<uint64_t>> map(total_buckets);
 
     for (int i = 0; i < db_entries; i++)
     {
-        std::vector<size_t> candidates = utils::get_candidate_buckets(i, num_candidates, total_buckets);
+        vector<size_t> candidates = utils::get_candidate_buckets(i, num_candidates, total_buckets);
         for (auto b : candidates)
         {
             buckets_[b].push_back(rawdb_[i]);
@@ -145,18 +141,19 @@ void BatchPIRServer::balance_buckets()
     auto num_buckets = buckets_.size();
     auto entry_size = batchpir_params_->get_entry_size();
 
-    auto generate_one_entry = [entry_size]() -> std::vector<unsigned char>
+    auto generate_one_entry = [entry_size](span<unsigned char> row) -> void
     {
-        return std::vector<unsigned char>(entry_size, 1);
+        for (int i = 0; i < entry_size; i++) {
+            row[i] = 1;
+        }
     };
 
     for (int i = 0; i < num_buckets; i++)
     {
-        auto size = (max_bucket - buckets_[i].size());
-        for (int j = 0; j < size; j++)
-        {
-
-            buckets_[i].push_back(generate_one_entry());
+        size_t initial_size = buckets_[i].size();
+        buckets_[i].resize(max_bucket);
+        for (int j = initial_size; j < max_bucket; j++) {
+            generate_one_entry(buckets_[i][j]);
         }
     }
 
@@ -195,9 +192,12 @@ void BatchPIRServer::prepare_pir_server()
     size_t max_bucket_size = batchpir_params_->get_max_bucket_size();
     size_t entry_size = batchpir_params_->get_entry_size();
     size_t dim_size = batchpir_params_->get_first_dimension_size();
+    // cout<<"Dimension size is "<<dim_size<<"\n";
+    // batchpir_params_->set_first_dimension_size(256);
     auto max_slots = batchpir_params_->get_seal_parameters().poly_modulus_degree();
     auto num_buckets = buckets_.size();
     size_t per_server_capacity = max_slots / dim_size;
+    // per_server_capacity = per_server_capacity
     size_t num_servers = ceil(num_buckets * 1.0 / per_server_capacity);
 
     auto remaining_buckets = num_buckets;
@@ -244,7 +244,8 @@ PIRResponseList BatchPIRServer::generate_response(uint32_t client_id, vector<PIR
     vector<PIRResponseList> responses;
 
     for (int i = 0; i < server_list_.size(); i++)
-    {
+    {   
+        cout<<"Number of server "<<i<<"\n";
         responses.push_back(server_list_[i].generate_response(client_id, queries[i]));
     }
 
@@ -257,7 +258,7 @@ PIRResponseList BatchPIRServer::merge_responses(vector<PIRResponseList> &respons
     return server_list_[0].merge_responses_chunks_buckets(responses, client_id);
 }
 
-bool BatchPIRServer::check_decoded_entries(vector<std::vector<std::vector<unsigned char>>> entries_list, vector<uint64_t> cuckoo_table)
+bool BatchPIRServer::check_decoded_entries(vector<RawDB> entries_list, vector<uint64_t> cuckoo_table)
 {
     size_t entry_size = batchpir_params_->get_entry_size();
     size_t dim_size = batchpir_params_->get_first_dimension_size();
