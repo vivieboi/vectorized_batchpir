@@ -1,0 +1,58 @@
+***************************************************
+             Starting example 1               
+***************************************************
++---------------------------------------------------+
+|               ENCRYPTION PARAMETERS               |
++---------------------------------------------------+
+|  seal_params_.poly_modulus_degree  = 8192
+|  seal_params_.coeff_modulus().bit_count   = [55 + 55 + 48 + 60] bits
+|  seal_params_.coeff_modulus().size = 4
+|  seal_params_.plain_modulus().bit_count = 22
++---------------------------------------------------+
++---------------------------------------------------+
+|                  Batch Parameters                 |
++---------------------------------------------------+
+| num_hash_funcs_:  3
+| batch_size_:      16
+| cuckoo_factor_:   1.2
+| num_entries_:     121272
+| max_attempts_:    500
++---------------------------------------------------+
+BatchPIRServer: Populating raw database...
+BatchPIRServer: Raw database populated.
+BatchPIRServer: Performing simple hash and bucket balancing...
+BatchPIRServer: Simple hash and balancing completed.
+BatchPIRServer: Preparing PIR servers......
++---------------------------------------------------+
+|                 PIR PARAMETERS                    |
++---------------------------------------------------+
+|  num_entries_                  = 18460
+|  num_rounded_entries_          = 18688
+|  entry_size_                   = 200
+|  num_columns_per_entry_        = 77
+|  db_ptx_                       = 5621
+|  dimensions_                   = [ 256 73 ]
++---------------------------------------------------+
+BatchPIRServer: Converting and merging databases. This may take some time...
+BatchPIRServer: Processed database 1 of 20BatchPIRServer: Processed database 2 of 20BatchPIRServer: Processed database 3 of 20BatchPIRServer: Processed database 4 of 20BatchPIRServer: Processed database 5 of 20BatchPIRServer: Processed database 6 of 20BatchPIRServer: Processed database 7 of 20BatchPIRServer: Processed database 8 of 20BatchPIRServer: Processed database 9 of 20BatchPIRServer: Processed database 10 of 20BatchPIRServer: Processed database 11 of 20BatchPIRServer: Processed database 12 of 20BatchPIRServer: Processed database 13 of 20BatchPIRServer: Processed database 14 of 20BatchPIRServer: Processed database 15 of 20BatchPIRServer: Processed database 16 of 20BatchPIRServer: Processed database 17 of 20BatchPIRServer: Processed database 18 of 20BatchPIRServer: Processed database 19 of 20BatchPIRServer: Processed database 20 of 20
+BatchPIRServer: Database converted to PIR DB and merged successfully!
+BatchPIRServer: Database is NTT processed!
+BatchPIRServer: PIR servers preparation complete.
+Main: Starting query generation for example 1...
+Main: Query generation complete for example 1.
+Main: Starting response generation for example 1...
+Main: Response generation complete for example 1.
+Main: Checking decoded entries for example 1...
+Main: Noise budget left in the response: 61
+
+Main: All the entries matched for example 1!!
+
+***********************
+     Timings Report    
+***********************
+Input Parameters: Batch Size: 16, Number of Entries: 121272, Entry Size: 200
+Initialization time: 4880 milliseconds
+Query generation time: 8 milliseconds
+Response generation time: 1953 milliseconds
+Total communication: 642 KB
+
